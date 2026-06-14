@@ -50,7 +50,7 @@ export function Calculadora() {
     if (concrete.fcrType === 'E') {
       if (concrete.fc < 0) missing.push("f'c (MPa)");
       if (concrete.s < 0) missing.push('Desviación Estándar');
-      if (concrete.dataCount < 0) missing.push('Número de Datos');
+      if (concrete.dataCount < 0) missing.push('Número de Ensayos');
     } else {
       if (concrete.fcrInput <= 0) missing.push("f'cr (MPa)");
     }
@@ -63,7 +63,7 @@ export function Calculadora() {
     if (coarseAggregate.peag <= 0) missing.push('Peso Específico Árido Grueso');
     if (coarseAggregate.hag < 0) missing.push('Humedad Árido Grueso');
     if (coarseAggregate.absag < 0) missing.push('Absorción Árido Grueso');
-    if (coarseAggregate.puc <= 0) missing.push('Peso Unit. Compactado');
+    if (coarseAggregate.puc <= 0) missing.push('Peso Unitario Compactado');
     return missing;
   }, [concrete, cement, fineAggregate, coarseAggregate]);
 
@@ -171,7 +171,7 @@ export function Calculadora() {
                   label="Tipo de Resistencia"
                   value={concrete.fcrType}
                   onChange={e => setConcrete({...concrete, fcrType: e.target.value as 'E' | 'R'})}
-                  tooltip="Especificada (f'c) o Requerida (f'cr)."
+                  tooltip="Especificada (E): se calcula el f'cr a partir del f'c del proyecto. Requerida (R): ingresas directamente el f'cr de diseño."
                 >
                   <option value="E">Especificada (E)</option>
                   <option value="R">Requerida (R)</option>
@@ -182,6 +182,7 @@ export function Calculadora() {
                     <InputField
                       type="number"
                       label="f'c (MPa)"
+                      tooltip="Resistencia especificada a la compresión del hormigón a 28 días, indicada en el proyecto estructural."
                       value={concrete.fc}
                       onChange={e => setConcrete({...concrete, fc: parseFloat(e.target.value) || 0})}
                       error={concrete.fc < 0 ? "Error" : undefined}
@@ -190,6 +191,7 @@ export function Calculadora() {
                     <InputField
                       type="number"
                       label="Desviación Estándar (s)"
+                      tooltip="Variabilidad estadística obtenida de ensayos de resistencia previos con el mismo tipo de hormigón. Ingresa 0 si no tienes registros."
                       value={concrete.s}
                       onChange={e => setConcrete({...concrete, s: parseFloat(e.target.value) || 0})}
                       error={concrete.s < 0 ? "Error" : undefined}
@@ -198,7 +200,8 @@ export function Calculadora() {
                     {concrete.s > 0 && (
                       <InputField
                         type="number"
-                        label="Número de Datos"
+                        label="Número de Ensayos"
+                        tooltip="Cantidad de ensayos de compresión que respaldan la desviación estándar ingresada. Con menos de 15 ensayos, el ACI 211.1 ignora la desviación estándar."
                         value={concrete.dataCount}
                         onChange={e => setConcrete({...concrete, dataCount: parseInt(e.target.value) || 0})}
                         error={concrete.dataCount < 0 ? "Error" : undefined}
@@ -210,6 +213,7 @@ export function Calculadora() {
                   <InputField
                     type="number"
                     label="f'cr (MPa)"
+                    tooltip="Resistencia requerida de diseño: ya incluye el margen de seguridad sobre el f'c. Se usa cuando el proyectista la define directamente."
                     value={concrete.fcrInput}
                     onChange={e => setConcrete({...concrete, fcrInput: parseFloat(e.target.value) || 0})}
                     error={concrete.fcrInput < 0 ? "Error" : undefined}
@@ -220,6 +224,7 @@ export function Calculadora() {
                 <InputField
                   type="number"
                   label="Asentamiento / Slump (cm)"
+                  tooltip="Medida de la trabajabilidad del hormigón fresco. Mayor valor indica mezcla más fluida. Rango típico: 5–15 cm."
                   value={concrete.slumpCm}
                   onChange={e => setConcrete({...concrete, slumpCm: parseFloat(e.target.value) || 0})}
                   error={concrete.slumpCm <= 0 ? "Error" : undefined}
@@ -227,9 +232,10 @@ export function Calculadora() {
                 />
 
                 <SelectField
-                  label="Aire"
+                  label="Aire Incorporado"
                   value={concrete.hasAir ? "S" : "N"}
                   onChange={e => setConcrete({...concrete, hasAir: e.target.value === "S"})}
+                  tooltip="Indica si la mezcla usa un aditivo incorporador de aire para mejorar la durabilidad ante ciclos de hielo-deshielo."
                 >
                   <option value="N">No</option>
                   <option value="S">Sí</option>
@@ -237,9 +243,10 @@ export function Calculadora() {
 
                 {concrete.hasAir && (
                   <SelectField
-                    label="Exposición"
+                    label="Nivel de Exposición Ambiental"
                     value={concrete.exposure}
                     onChange={e => setConcrete({...concrete, exposure: parseInt(e.target.value) as 0|1|2|3})}
+                    tooltip="Condición ambiental a la que estará expuesto el hormigón. Define el contenido mínimo de aire requerido por ACI 211.1."
                   >
                     <option value="1">Ligera</option>
                     <option value="2">Moderada</option>
@@ -249,9 +256,10 @@ export function Calculadora() {
 
                 {concrete.hasAir && concrete.exposure === 3 && (
                   <SelectField
-                    label="Congelamiento / Deshielo"
+                    label="Exposición a Congelamiento / Deshielo"
                     value={concrete.freezeThaw ? "S" : "N"}
                     onChange={e => setConcrete({...concrete, freezeThaw: e.target.value === "S"})}
+                    tooltip="Indica si el hormigón estará sometido a ciclos repetidos de congelamiento y deshielo, lo que limita la relación agua/cemento máxima a 0.45."
                   >
                     <option value="N">No</option>
                     <option value="S">Sí</option>
@@ -265,6 +273,7 @@ export function Calculadora() {
                 <InputField
                   type="number"
                   label="Peso Específico (kg/m³)"
+                  tooltip="Densidad del cemento. Valor típico para cemento Portland: 3150 kg/m³."
                   value={cement.pec}
                   onChange={e => setCement({...cement, pec: parseFloat(e.target.value) || 0})}
                   error={cement.pec <= 0 ? "Error" : undefined}
@@ -276,21 +285,24 @@ export function Calculadora() {
               <div className="grid grid-cols-2 gap-4">
                 <InputField
                   type="number"
-                  label="Peso Específico"
+                  label="Peso Específico (kg/m³)"
+                  tooltip="Densidad de las partículas del árido fino, obtenida en laboratorio. Valor típico: 2600 kg/m³."
                   value={fineAggregate.peaf}
                   onChange={e => setFineAggregate({...fineAggregate, peaf: parseFloat(e.target.value) || 0})}
                   error={fineAggregate.peaf <= 0 ? "Error" : undefined}
                 />
                 <InputField
                   type="number"
-                  label="Humedad (%)"
+                  label="Humedad Superficial (%)"
+                  tooltip="Porcentaje de agua libre en la superficie de las partículas, medida en el árido tal como llega a obra. Puede ser positiva (húmedo) o cero (seco)."
                   value={fineAggregate.haf}
                   onChange={e => setFineAggregate({...fineAggregate, haf: parseFloat(e.target.value) || 0})}
                   error={fineAggregate.haf < 0 ? "Error" : undefined}
                 />
                 <InputField
                   type="number"
-                  label="Absorción (%)"
+                  label="Absorción de Agua (%)"
+                  tooltip="Porcentaje de agua que el árido puede absorber hasta saturarse. Se obtiene en laboratorio y se usa para corregir el agua de la mezcla."
                   value={fineAggregate.absaf}
                   onChange={e => setFineAggregate({...fineAggregate, absaf: parseFloat(e.target.value) || 0})}
                   error={fineAggregate.absaf < 0 ? "Error" : undefined}
@@ -298,6 +310,7 @@ export function Calculadora() {
                 <InputField
                   type="number"
                   label="Módulo de Finura"
+                  tooltip="Índice de granulometría del árido fino. Valor entre 2.3 y 3.1. A mayor valor, arena más gruesa. Se calcula sumando los porcentajes retenidos acumulados en tamices normalizados y dividiendo por 100."
                   value={fineAggregate.mf}
                   onChange={e => setFineAggregate({...fineAggregate, mf: parseFloat(e.target.value) || 0})}
                   error={fineAggregate.mf < 0 ? "Error" : undefined}
@@ -309,29 +322,33 @@ export function Calculadora() {
               <div className="grid grid-cols-2 gap-4">
                 <InputField
                   type="number"
-                  label="Peso Específico"
+                  label="Peso Específico (kg/m³)"
+                  tooltip="Densidad de las partículas del árido grueso, obtenida en laboratorio. Valor típico: 2650 kg/m³."
                   value={coarseAggregate.peag}
                   onChange={e => setCoarseAggregate({...coarseAggregate, peag: parseFloat(e.target.value) || 0})}
                   error={coarseAggregate.peag <= 0 ? "Error" : undefined}
                 />
                 <InputField
                   type="number"
-                  label="Humedad (%)"
+                  label="Humedad Superficial (%)"
+                  tooltip="Porcentaje de agua libre en la superficie de las partículas, medida en el árido tal como llega a obra."
                   value={coarseAggregate.hag}
                   onChange={e => setCoarseAggregate({...coarseAggregate, hag: parseFloat(e.target.value) || 0})}
                   error={coarseAggregate.hag < 0 ? "Error" : undefined}
                 />
                 <InputField
                   type="number"
-                  label="Absorción (%)"
+                  label="Absorción de Agua (%)"
+                  tooltip="Porcentaje de agua que el árido puede absorber hasta saturarse. Se obtiene en laboratorio."
                   value={coarseAggregate.absag}
                   onChange={e => setCoarseAggregate({...coarseAggregate, absag: parseFloat(e.target.value) || 0})}
                   error={coarseAggregate.absag < 0 ? "Error" : undefined}
                 />
                 <SelectField
-                  label="Tam. Máximo Nominal"
+                  label="Tamaño Máximo Nominal"
                   value={coarseAggregate.tmn}
                   onChange={e => setCoarseAggregate({...coarseAggregate, tmn: e.target.value as TMN})}
+                  tooltip="Abertura del tamiz inmediatamente superior al que retiene más del 15% del árido grueso. Dato del análisis granulométrico."
                 >
                   <option value="3/8">3/8"</option>
                   <option value="1/2">1/2"</option>
@@ -344,7 +361,8 @@ export function Calculadora() {
                 </SelectField>
                 <InputField
                   type="number"
-                  label="Peso Unit. Compactado (kg/m³)"
+                  label="Peso Unitario Compactado (kg/m³)"
+                  tooltip="Masa del árido grueso por unidad de volumen, compactado con varilla según norma. Se usa para calcular el volumen de árido grueso por m³ de hormigón."
                   value={coarseAggregate.puc}
                   onChange={e => setCoarseAggregate({...coarseAggregate, puc: parseFloat(e.target.value) || 0})}
                   error={coarseAggregate.puc <= 0 ? "Error" : undefined}

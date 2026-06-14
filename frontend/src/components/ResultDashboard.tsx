@@ -72,7 +72,7 @@ export const ResultDashboard: React.FC<ResultDashboardProps> = ({ results, isVal
             <div className="mt-4 bg-[#8b9580] p-2 rounded border border-[#1a2421]/10">
               <div className="text-[10px] opacity-70 uppercase mb-1 flex justify-between">
                 <span>Proporción [ C : AF : AG : A ]</span>
-                <span>PROPORC_VOL</span>
+                <span>PROPORC. EN MASA</span>
               </div>
               <div className="text-xl md:text-3xl font-bold tracking-widest flex justify-between items-center px-2">
                 <span>1</span>
@@ -89,7 +89,7 @@ export const ResultDashboard: React.FC<ResultDashboardProps> = ({ results, isVal
               <span>a/c: <b className="text-sm">{results.wcr}</b></span>
               <span>f'cr: <b className="text-sm">{results.fcr}</b> MPa</span>
               <span>Aire: <b className="text-sm">{results.air}</b>%</span>
-              <span>Peso: <b className="text-sm">{results.ph}</b> kg/m³</span>
+              <span>Peso fresco: <b className="text-sm">{results.ph}</b> kg/m³</span>
             </div>
           </div>
         )}

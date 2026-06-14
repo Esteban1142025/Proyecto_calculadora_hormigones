@@ -37,13 +37,29 @@ function App() {
   });
 
   // Validation
-  const isValid = useMemo(() => {
-    if (concrete.fc < 0 || concrete.s < 0 || concrete.dataCount < 0 || concrete.fcrInput < 0 || concrete.slumpCm <= 0) return false;
-    if (cement.pec <= 0) return false;
-    if (fineAggregate.peaf <= 0 || fineAggregate.haf < 0 || fineAggregate.absaf < 0 || fineAggregate.mf < 0) return false;
-    if (coarseAggregate.peag <= 0 || coarseAggregate.hag < 0 || coarseAggregate.absag < 0 || coarseAggregate.puc <= 0) return false;
-    return true;
+  const missingFields = useMemo(() => {
+    const missing: string[] = [];
+    if (concrete.fcrType === 'E') {
+      if (concrete.fc < 0) missing.push("f'c (MPa)");
+      if (concrete.s < 0) missing.push('Desviación Estándar');
+      if (concrete.dataCount < 0) missing.push('Número de Datos');
+    } else {
+      if (concrete.fcrInput <= 0) missing.push("f'cr (MPa)");
+    }
+    if (concrete.slumpCm <= 0) missing.push('Asentamiento / Slump');
+    if (cement.pec <= 0) missing.push('Peso Específico del Cemento');
+    if (fineAggregate.peaf <= 0) missing.push('Peso Específico Árido Fino');
+    if (fineAggregate.haf < 0) missing.push('Humedad Árido Fino');
+    if (fineAggregate.absaf < 0) missing.push('Absorción Árido Fino');
+    if (fineAggregate.mf < 0) missing.push('Módulo de Finura');
+    if (coarseAggregate.peag <= 0) missing.push('Peso Específico Árido Grueso');
+    if (coarseAggregate.hag < 0) missing.push('Humedad Árido Grueso');
+    if (coarseAggregate.absag < 0) missing.push('Absorción Árido Grueso');
+    if (coarseAggregate.puc <= 0) missing.push('Peso Unit. Compactado');
+    return missing;
   }, [concrete, cement, fineAggregate, coarseAggregate]);
+
+  const isValid = missingFields.length === 0;
 
   const results = useMemo(() => {
     if (!isValid) return null;
@@ -70,7 +86,7 @@ function App() {
         </div>
 
         {/* Screen */}
-        <ResultDashboard results={results} isValid={isValid} />
+        <ResultDashboard results={results} isValid={isValid} missingFields={missingFields} />
 
         {/* Brand Bar */}
         <div className="flex justify-between items-end mb-4 border-b border-[#34495e] pb-2">
@@ -108,7 +124,7 @@ function App() {
                       label="f'c (MPa)"
                       value={concrete.fc}
                       onChange={e => setConcrete({...concrete, fc: parseFloat(e.target.value) || 0})}
-                      error={concrete.fc < 0 ? "Err" : undefined}
+                      error={concrete.fc < 0 ? "Error" : undefined}
                       min="0"
                     />
                     <InputField
@@ -116,7 +132,7 @@ function App() {
                       label="Desviación Estándar (s)"
                       value={concrete.s}
                       onChange={e => setConcrete({...concrete, s: parseFloat(e.target.value) || 0})}
-                      error={concrete.s < 0 ? "Err" : undefined}
+                      error={concrete.s < 0 ? "Error" : undefined}
                       min="0"
                     />
                     {concrete.s > 0 && (
@@ -125,7 +141,7 @@ function App() {
                         label="Número de Datos"
                         value={concrete.dataCount}
                         onChange={e => setConcrete({...concrete, dataCount: parseInt(e.target.value) || 0})}
-                        error={concrete.dataCount < 0 ? "Err" : undefined}
+                        error={concrete.dataCount < 0 ? "Error" : undefined}
                         min="0"
                       />
                     )}
@@ -136,7 +152,7 @@ function App() {
                     label="f'cr (MPa)"
                     value={concrete.fcrInput}
                     onChange={e => setConcrete({...concrete, fcrInput: parseFloat(e.target.value) || 0})}
-                    error={concrete.fcrInput < 0 ? "Err" : undefined}
+                    error={concrete.fcrInput < 0 ? "Error" : undefined}
                     min="0"
                   />
                 )}
@@ -146,7 +162,7 @@ function App() {
                   label="Asentamiento / Slump (cm)"
                   value={concrete.slumpCm}
                   onChange={e => setConcrete({...concrete, slumpCm: parseFloat(e.target.value) || 0})}
-                  error={concrete.slumpCm <= 0 ? "Err" : undefined}
+                  error={concrete.slumpCm <= 0 ? "Error" : undefined}
                   min="0.1"
                 />
 
@@ -191,7 +207,7 @@ function App() {
                   label="Peso Específico (kg/m³)"
                   value={cement.pec}
                   onChange={e => setCement({...cement, pec: parseFloat(e.target.value) || 0})}
-                  error={cement.pec <= 0 ? "Err" : undefined}
+                  error={cement.pec <= 0 ? "Error" : undefined}
                 />
               </div>
             )}
@@ -203,28 +219,28 @@ function App() {
                   label="Peso Específico"
                   value={fineAggregate.peaf}
                   onChange={e => setFineAggregate({...fineAggregate, peaf: parseFloat(e.target.value) || 0})}
-                  error={fineAggregate.peaf <= 0 ? "Err" : undefined}
+                  error={fineAggregate.peaf <= 0 ? "Error" : undefined}
                 />
                 <InputField
                   type="number"
                   label="Humedad (%)"
                   value={fineAggregate.haf}
                   onChange={e => setFineAggregate({...fineAggregate, haf: parseFloat(e.target.value) || 0})}
-                  error={fineAggregate.haf < 0 ? "Err" : undefined}
+                  error={fineAggregate.haf < 0 ? "Error" : undefined}
                 />
                 <InputField
                   type="number"
                   label="Absorción (%)"
                   value={fineAggregate.absaf}
                   onChange={e => setFineAggregate({...fineAggregate, absaf: parseFloat(e.target.value) || 0})}
-                  error={fineAggregate.absaf < 0 ? "Err" : undefined}
+                  error={fineAggregate.absaf < 0 ? "Error" : undefined}
                 />
                 <InputField
                   type="number"
                   label="Módulo de Finura"
                   value={fineAggregate.mf}
                   onChange={e => setFineAggregate({...fineAggregate, mf: parseFloat(e.target.value) || 0})}
-                  error={fineAggregate.mf < 0 ? "Err" : undefined}
+                  error={fineAggregate.mf < 0 ? "Error" : undefined}
                 />
               </div>
             )}
@@ -236,21 +252,21 @@ function App() {
                   label="Peso Específico"
                   value={coarseAggregate.peag}
                   onChange={e => setCoarseAggregate({...coarseAggregate, peag: parseFloat(e.target.value) || 0})}
-                  error={coarseAggregate.peag <= 0 ? "Err" : undefined}
+                  error={coarseAggregate.peag <= 0 ? "Error" : undefined}
                 />
                 <InputField
                   type="number"
                   label="Humedad (%)"
                   value={coarseAggregate.hag}
                   onChange={e => setCoarseAggregate({...coarseAggregate, hag: parseFloat(e.target.value) || 0})}
-                  error={coarseAggregate.hag < 0 ? "Err" : undefined}
+                  error={coarseAggregate.hag < 0 ? "Error" : undefined}
                 />
                 <InputField
                   type="number"
                   label="Absorción (%)"
                   value={coarseAggregate.absag}
                   onChange={e => setCoarseAggregate({...coarseAggregate, absag: parseFloat(e.target.value) || 0})}
-                  error={coarseAggregate.absag < 0 ? "Err" : undefined}
+                  error={coarseAggregate.absag < 0 ? "Error" : undefined}
                 />
                 <SelectField
                   label="Tam. Máximo Nominal"
@@ -271,7 +287,7 @@ function App() {
                   label="Peso Unit. Compactado (kg/m³)"
                   value={coarseAggregate.puc}
                   onChange={e => setCoarseAggregate({...coarseAggregate, puc: parseFloat(e.target.value) || 0})}
-                  error={coarseAggregate.puc <= 0 ? "Err" : undefined}
+                  error={coarseAggregate.puc <= 0 ? "Error" : undefined}
                 />
               </div>
             )}

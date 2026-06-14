@@ -4,9 +4,10 @@ import type { CalculatorResults } from '../utils/calculator';
 interface ResultDashboardProps {
   results: CalculatorResults | null;
   isValid: boolean;
+  missingFields?: string[];
 }
 
-export const ResultDashboard: React.FC<ResultDashboardProps> = ({ results, isValid }) => {
+export const ResultDashboard: React.FC<ResultDashboardProps> = ({ results, isValid, missingFields = [] }) => {
   return (
     <div className="mb-6">
       {/* Solar Panel decoration */}
@@ -36,6 +37,15 @@ export const ResultDashboard: React.FC<ResultDashboardProps> = ({ results, isVal
             <div className="text-[10px] md:text-xs mt-3 opacity-60 uppercase tracking-widest">
               Ingrese los parámetros válidos a continuación
             </div>
+            {missingFields.length > 0 && (
+              <div className="mt-3 flex flex-wrap justify-center gap-1 max-w-xs">
+                {missingFields.map(field => (
+                  <span key={field} className="text-[9px] md:text-[10px] bg-[#1a2421]/40 border border-[#1a2421]/30 rounded px-2 py-0.5 uppercase tracking-wide opacity-80">
+                    {field}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         ) : (
           <div className="flex-1 flex flex-col justify-between relative">

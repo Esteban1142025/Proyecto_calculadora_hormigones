@@ -13,7 +13,7 @@ function App() {
     fcrInput: 0,
     slumpCm: 10,
     hasAir: false,
-    exposure: 0,
+    exposure: 1,
     freezeThaw: false,
   });
 
@@ -74,7 +74,7 @@ function App() {
 
         {/* Brand Bar */}
         <div className="flex justify-between items-end mb-4 border-b border-[#34495e] pb-2">
-          <div className="text-xs text-slate-400 uppercase tracking-widest">Input Parameters</div>
+          <div className="text-xs text-slate-400 uppercase tracking-widest">Parámetros de Entrada</div>
           <Settings className="w-4 h-4 text-slate-500" />
         </div>
 
@@ -84,15 +84,15 @@ function App() {
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             <TabButton active={activeTab === 'concrete'} onClick={() => setActiveTab('concrete')}>Hormigón</TabButton>
             <TabButton active={activeTab === 'cement'} onClick={() => setActiveTab('cement')}>Cemento</TabButton>
-            <TabButton active={activeTab === 'fine'} onClick={() => setActiveTab('fine')}>Á. Fino</TabButton>
-            <TabButton active={activeTab === 'coarse'} onClick={() => setActiveTab('coarse')}>Á. Grueso</TabButton>
+            <TabButton active={activeTab === 'fine'} onClick={() => setActiveTab('fine')}>Árido Fino</TabButton>
+            <TabButton active={activeTab === 'coarse'} onClick={() => setActiveTab('coarse')}>Árido Grueso</TabButton>
           </div>
 
           <div className="bg-[#1a252f] p-4 rounded-lg shadow-inner border border-[#0f172a]">
             {activeTab === 'concrete' && (
               <div className="grid grid-cols-2 gap-4">
                 <SelectField
-                  label="Tipo Res."
+                  label="Tipo de Resistencia"
                   value={concrete.fcrType}
                   onChange={e => setConcrete({...concrete, fcrType: e.target.value as 'E' | 'R'})}
                   tooltip="Especificada (f'c) o Requerida (f'cr)."
@@ -113,7 +113,7 @@ function App() {
                     />
                     <InputField
                       type="number"
-                      label="Desv. Est. (s)"
+                      label="Desviación Estándar (s)"
                       value={concrete.s}
                       onChange={e => setConcrete({...concrete, s: parseFloat(e.target.value) || 0})}
                       error={concrete.s < 0 ? "Err" : undefined}
@@ -122,7 +122,7 @@ function App() {
                     {concrete.s > 0 && (
                       <InputField
                         type="number"
-                        label="Num. Datos"
+                        label="Número de Datos"
                         value={concrete.dataCount}
                         onChange={e => setConcrete({...concrete, dataCount: parseInt(e.target.value) || 0})}
                         error={concrete.dataCount < 0 ? "Err" : undefined}
@@ -143,7 +143,7 @@ function App() {
 
                 <InputField
                   type="number"
-                  label="Slump (cm)"
+                  label="Asentamiento / Slump (cm)"
                   value={concrete.slumpCm}
                   onChange={e => setConcrete({...concrete, slumpCm: parseFloat(e.target.value) || 0})}
                   error={concrete.slumpCm <= 0 ? "Err" : undefined}
@@ -173,7 +173,7 @@ function App() {
 
                 {concrete.hasAir && concrete.exposure === 3 && (
                   <SelectField
-                    label="Cong./Desh."
+                    label="Congelamiento / Deshielo"
                     value={concrete.freezeThaw ? "S" : "N"}
                     onChange={e => setConcrete({...concrete, freezeThaw: e.target.value === "S"})}
                   >
@@ -188,7 +188,7 @@ function App() {
               <div className="grid grid-cols-2 gap-4">
                 <InputField
                   type="number"
-                  label="Peso Esp. (kg/m³)"
+                  label="Peso Específico (kg/m³)"
                   value={cement.pec}
                   onChange={e => setCement({...cement, pec: parseFloat(e.target.value) || 0})}
                   error={cement.pec <= 0 ? "Err" : undefined}
@@ -200,7 +200,7 @@ function App() {
               <div className="grid grid-cols-2 gap-4">
                 <InputField
                   type="number"
-                  label="Peso Esp."
+                  label="Peso Específico"
                   value={fineAggregate.peaf}
                   onChange={e => setFineAggregate({...fineAggregate, peaf: parseFloat(e.target.value) || 0})}
                   error={fineAggregate.peaf <= 0 ? "Err" : undefined}
@@ -221,7 +221,7 @@ function App() {
                 />
                 <InputField
                   type="number"
-                  label="Mód. Finura"
+                  label="Módulo de Finura"
                   value={fineAggregate.mf}
                   onChange={e => setFineAggregate({...fineAggregate, mf: parseFloat(e.target.value) || 0})}
                   error={fineAggregate.mf < 0 ? "Err" : undefined}
@@ -233,7 +233,7 @@ function App() {
               <div className="grid grid-cols-2 gap-4">
                 <InputField
                   type="number"
-                  label="Peso Esp."
+                  label="Peso Específico"
                   value={coarseAggregate.peag}
                   onChange={e => setCoarseAggregate({...coarseAggregate, peag: parseFloat(e.target.value) || 0})}
                   error={coarseAggregate.peag <= 0 ? "Err" : undefined}
@@ -253,7 +253,7 @@ function App() {
                   error={coarseAggregate.absag < 0 ? "Err" : undefined}
                 />
                 <SelectField
-                  label="TMN"
+                  label="Tam. Máximo Nominal"
                   value={coarseAggregate.tmn}
                   onChange={e => setCoarseAggregate({...coarseAggregate, tmn: e.target.value as TMN})}
                 >
@@ -268,7 +268,7 @@ function App() {
                 </SelectField>
                 <InputField
                   type="number"
-                  label="PUC"
+                  label="Peso Unit. Compactado (kg/m³)"
                   value={coarseAggregate.puc}
                   onChange={e => setCoarseAggregate({...coarseAggregate, puc: parseFloat(e.target.value) || 0})}
                   error={coarseAggregate.puc <= 0 ? "Err" : undefined}

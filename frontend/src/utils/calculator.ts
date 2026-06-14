@@ -69,18 +69,23 @@ export function calculateMixDesign(inputs: CalculatorInputs): CalculatorResults 
   let s = concrete.s;
   if (s > 0) {
     const q = concrete.dataCount;
-    if (q > 0 && q < 15) s = 0;
-    else if (q === 15) s = s * 1.16;
-    else if (q === 20) s = s * 1.08;
-    else if (q === 25) s = s * 1.03;
-    // q >= 30 remains s
+    if (q > 0 && q < 15) {
+      s = 0;
+    } else if (q >= 15 && q < 20) {
+      s = s * (1.16 + (1.08 - 1.16) * (q - 15) / (20 - 15));
+    } else if (q >= 20 && q < 25) {
+      s = s * (1.08 + (1.03 - 1.08) * (q - 20) / (25 - 20));
+    } else if (q >= 25 && q < 30) {
+      s = s * (1.03 + (1.00 - 1.03) * (q - 25) / (30 - 25));
+    }
+    // q >= 30: factor = 1.00, s sin modificar
   }
 
   // Paso 1: Fcr
   let fcr = 0;
   if (concrete.fcrType === 'E') {
     if (s > 0) {
-      const a = fc > 35 ? fc + 1.34 * s : fc + 1.34 * s;
+      const a = fc + 1.34 * s;
       const b = fc > 35 ? 0.9 * fc + 2.33 * s : fc + 2.33 * s - 3.5;
       fcr = Math.max(a, b);
     } else {
@@ -93,12 +98,9 @@ export function calculateMixDesign(inputs: CalculatorInputs): CalculatorResults 
     if (fcr > 100) fcr = fcr / 10;
   }
 
-  // Slump category
-  let rv = 1;
+  // Slump category (ACI 211.1 Tabla 6.3.3: rangos 25-50mm, 75-100mm, 150-175mm)
   const scm = concrete.slumpCm;
-  if (scm >= 2.5 && scm < 5) rv = 1;
-  else if (scm >= 7.5 && scm <= 10) rv = 2;
-  else if (scm >= 15 && scm <= 17.5) rv = 3;
+  const rv: 1 | 2 | 3 = scm < 6.25 ? 1 : scm < 12.5 ? 2 : 3;
 
   const tmn = coarseAggregate.tmn;
   const exp = concrete.hasAir ? concrete.exposure : 0;
@@ -134,6 +136,7 @@ export function calculateMixDesign(inputs: CalculatorInputs): CalculatorResults 
       else if (tmn === "1 1/2") { h2o = 190; air = 1; }
       else if (tmn === "2") { h2o = 178; air = 0.5; }
       else if (tmn === "3") { h2o = 160; air = 0.3; }
+      else if (tmn === "6") { h2o = 135; air = 0.2; }
     }
   } else {
     if (rv === 1) {
@@ -158,10 +161,11 @@ export function calculateMixDesign(inputs: CalculatorInputs): CalculatorResults 
       if (tmn === "3/8") h2o = 216;
       else if (tmn === "1/2") h2o = 205;
       else if (tmn === "3/4") h2o = 197;
-      else if (tmn === "1") h2o = 174;
+      else if (tmn === "1") h2o = 185;
       else if (tmn === "1 1/2") h2o = 174;
       else if (tmn === "2") h2o = 166;
       else if (tmn === "3") h2o = 154;
+      else if (tmn === "6") h2o = 130;
     }
 
     if (exp === 1) {

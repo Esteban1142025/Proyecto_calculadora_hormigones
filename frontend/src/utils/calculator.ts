@@ -31,11 +31,20 @@ export interface CoarseAggregateInputs {
   puc: number;
 }
 
+export interface AdmixtureInputs {
+  useWaterReducer: boolean;
+  waterReductionPct: number;      // % de reducción de agua (1–30)
+  usePozzolan: boolean;
+  pozzolanReplacementPct: number; // % del cemento reemplazado por puzolana (5–30)
+  pePozzolan: number;             // peso específico de la puzolana (kg/m³)
+}
+
 export interface CalculatorInputs {
   concrete: ConcreteInputs;
   cement: CementInputs;
   fineAggregate: FineAggregateInputs;
   coarseAggregate: CoarseAggregateInputs;
+  admixture?: AdmixtureInputs;
 }
 
 export interface CalculatorResults {
@@ -44,6 +53,8 @@ export interface CalculatorResults {
   air: number;
   wcr: number;
   cement: number;
+  cementNet: number;
+  pozzolan: number;
   vag: number;
   ag: number;
   ph: number;
@@ -61,6 +72,10 @@ export interface CalculatorResults {
 
 export function calculateMixDesign(inputs: CalculatorInputs): CalculatorResults {
   const { concrete, cement, fineAggregate, coarseAggregate } = inputs;
+  const admixture: AdmixtureInputs = inputs.admixture ?? {
+    useWaterReducer: false, waterReductionPct: 0,
+    usePozzolan: false, pozzolanReplacementPct: 0, pePozzolan: 2200,
+  };
 
   // -- Preprocess inputs --
   let fc = concrete.fc;
@@ -198,6 +213,11 @@ export function calculateMixDesign(inputs: CalculatorInputs): CalculatorResults 
     }
   }
 
+  // Aditivo reductor de agua: reduce el agua de diseño antes de calcular cemento
+  if (admixture.useWaterReducer && admixture.waterReductionPct > 0) {
+    h2o = Math.round(h2o * (1 - admixture.waterReductionPct / 100) * 10) / 10;
+  }
+
   // Paso 3: a/c
   const f1 = 42, f2 = 35, f3 = 28, f4 = 21;
   const ac1 = 0.41, ac2 = 0.48, ac3 = 0.57, ac4 = 0.68, ac5 = 0.82;
@@ -223,6 +243,16 @@ export function calculateMixDesign(inputs: CalculatorInputs): CalculatorResults 
   rel_ac = Math.round(rel_ac * 1000) / 1000;
   let C = h2o / rel_ac;
   C = Math.round(C * 1000) / 1000;
+
+  // Aditivo puzolana: reemplaza una fracción del cemento
+  let pozzolan = 0;
+  let cementNet = C;
+  let pePoz = admixture.pePozzolan > 0 ? admixture.pePozzolan : 2200;
+  if (pePoz < 1000) pePoz *= 1000;
+  if (admixture.usePozzolan && admixture.pozzolanReplacementPct > 0) {
+    pozzolan   = Math.round(C * admixture.pozzolanReplacementPct / 100 * 1000) / 1000;
+    cementNet  = Math.round((C - pozzolan) * 1000) / 1000;
+  }
 
   // Paso 4: VAG
   const MF1 = 2.40, MF2 = 2.60, MF3 = 2.80, MF4 = 3.00;
@@ -284,7 +314,7 @@ export function calculateMixDesign(inputs: CalculatorInputs): CalculatorResults 
   let peaf = fineAggregate.peaf;
   if (peaf < 1000) peaf *= 1000;
 
-  const vaf = 1 - (C / pec) - (h2o / 1000) - (ag / peag) - (air / 100);
+  const vaf = 1 - (cementNet / pec) - (pozzolan > 0 ? pozzolan / pePoz : 0) - (h2o / 1000) - (ag / peag) - (air / 100);
   let af = vaf * peaf;
   af = Math.round(af * 1000) / 1000;
 
@@ -312,6 +342,8 @@ export function calculateMixDesign(inputs: CalculatorInputs): CalculatorResults 
     air,
     wcr: rel_ac,
     cement: C,
+    cementNet,
+    pozzolan,
     vag,
     ag,
     ph,

@@ -15,6 +15,7 @@ import type {
   CementInputs,
   FineAggregateInputs,
   CoarseAggregateInputs,
+  AdmixtureInputs,
 } from '../utils/calculator';
 
 interface ConsultasPanelProps {
@@ -24,6 +25,7 @@ interface ConsultasPanelProps {
   cement: CementInputs;
   fineAggregate: FineAggregateInputs;
   coarseAggregate: CoarseAggregateInputs;
+  admixture: AdmixtureInputs;
   onCargar: (data: ReturnType<typeof dbToInputsFormat>) => void;
 }
 
@@ -34,6 +36,7 @@ export function ConsultasPanel({
   cement,
   fineAggregate,
   coarseAggregate,
+  admixture,
   onCargar,
 }: ConsultasPanelProps) {
   const [consultas, setConsultas] = useState<ConsultaResumen[]>([]);
@@ -77,7 +80,7 @@ export function ConsultasPanel({
     setError('');
     try {
       await apiSaveConsulta(
-        inputsToDbFormat(nombreNueva.trim(), concrete, cement, fineAggregate, coarseAggregate)
+        inputsToDbFormat(nombreNueva.trim(), concrete, cement, fineAggregate, coarseAggregate, admixture)
       );
       setExito(`"${nombreNueva.trim()}" guardada correctamente`);
       setNombreNueva('');

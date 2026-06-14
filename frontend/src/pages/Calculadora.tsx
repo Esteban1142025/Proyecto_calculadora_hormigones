@@ -6,7 +6,7 @@ import { ResultDashboard } from '../components/ResultDashboard';
 import { ConsultasPanel } from '../components/ConsultasPanel';
 import { useAuth } from '../context/AuthContext';
 import { dbToInputsFormat } from '../api/client';
-import { calculateMixDesign, type CalculatorInputs, type TMN } from '../utils/calculator';
+import { calculateMixDesign, type CalculatorInputs, type AdmixtureInputs, type TMN } from '../utils/calculator';
 
 export function Calculadora() {
   const { usuario, logout } = useAuth();
@@ -44,6 +44,14 @@ export function Calculadora() {
     puc: 1600,
   });
 
+  const [admixture, setAdmixture] = useState<AdmixtureInputs>({
+    useWaterReducer: false,
+    waterReductionPct: 0,
+    usePozzolan: false,
+    pozzolanReplacementPct: 0,
+    pePozzolan: 2200,
+  });
+
   // Validación
   const missingFields = useMemo(() => {
     const missing: string[] = [];
@@ -71,10 +79,10 @@ export function Calculadora() {
 
   const results = useMemo(() => {
     if (!isValid) return null;
-    return calculateMixDesign({ concrete, cement, fineAggregate, coarseAggregate });
-  }, [concrete, cement, fineAggregate, coarseAggregate, isValid]);
+    return calculateMixDesign({ concrete, cement, fineAggregate, coarseAggregate, admixture });
+  }, [concrete, cement, fineAggregate, coarseAggregate, admixture, isValid]);
 
-  const [activeTab, setActiveTab] = useState<'concrete' | 'cement' | 'fine' | 'coarse'>('concrete');
+  const [activeTab, setActiveTab] = useState<'concrete' | 'cement' | 'fine' | 'coarse' | 'admixture'>('concrete');
 
   // Carga una consulta guardada en todos los campos
   function handleCargarConsulta(data: ReturnType<typeof dbToInputsFormat>) {
@@ -82,6 +90,7 @@ export function Calculadora() {
     setCement(data.cement);
     setFineAggregate(data.fineAggregate);
     setCoarseAggregate(data.coarseAggregate);
+    if (data.admixture) setAdmixture(data.admixture);
     setActiveTab('concrete');
   }
 
@@ -100,6 +109,7 @@ export function Calculadora() {
         cement={cement}
         fineAggregate={fineAggregate}
         coarseAggregate={coarseAggregate}
+        admixture={admixture}
         onCargar={handleCargarConsulta}
       />
 
@@ -162,6 +172,9 @@ export function Calculadora() {
             <TabButton active={activeTab === 'cement'} onClick={() => setActiveTab('cement')}>Cemento</TabButton>
             <TabButton active={activeTab === 'fine'} onClick={() => setActiveTab('fine')}>Árido Fino</TabButton>
             <TabButton active={activeTab === 'coarse'} onClick={() => setActiveTab('coarse')}>Árido Grueso</TabButton>
+            <TabButton active={activeTab === 'admixture'} onClick={() => setActiveTab('admixture')}>
+              Aditivos{(admixture.useWaterReducer || admixture.usePozzolan) ? ' ●' : ''}
+            </TabButton>
           </div>
 
           <div className="bg-[#1a252f] p-4 rounded-lg shadow-inner border border-[#0f172a]">
@@ -367,6 +380,85 @@ export function Calculadora() {
                   onChange={e => setCoarseAggregate({...coarseAggregate, puc: parseFloat(e.target.value) || 0})}
                   error={coarseAggregate.puc <= 0 ? "Error" : undefined}
                 />
+              </div>
+            )}
+
+            {activeTab === 'admixture' && (
+              <div className="flex flex-col gap-5">
+
+                {/* Reductor de agua */}
+                <div className="flex flex-col gap-3">
+                  <label className="flex items-center gap-3 cursor-pointer select-none">
+                    <div
+                      onClick={() => setAdmixture({...admixture, useWaterReducer: !admixture.useWaterReducer})}
+                      className={`w-10 h-5 rounded-full transition-colors relative ${admixture.useWaterReducer ? 'bg-blue-500' : 'bg-[#34495e]'}`}
+                    >
+                      <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${admixture.useWaterReducer ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-200 uppercase tracking-wider">Aditivo Reductor de Agua</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">Plastificante o superplastificante que reduce la demanda de agua de la mezcla</p>
+                    </div>
+                  </label>
+                  {admixture.useWaterReducer && (
+                    <div className="pl-4 border-l-2 border-blue-500/40">
+                      <InputField
+                        type="number"
+                        label="Reducción de Agua (%)"
+                        tooltip="Porcentaje de reducción de agua que ofrece el aditivo según ficha técnica del fabricante. Plastificantes: 5–15%. Superplastificantes: 15–30%."
+                        value={admixture.waterReductionPct}
+                        onChange={e => setAdmixture({...admixture, waterReductionPct: parseFloat(e.target.value) || 0})}
+                        min="1"
+                        max="30"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="h-px bg-[#2c3e50]" />
+
+                {/* Puzolana */}
+                <div className="flex flex-col gap-3">
+                  <label className="flex items-center gap-3 cursor-pointer select-none">
+                    <div
+                      onClick={() => setAdmixture({...admixture, usePozzolan: !admixture.usePozzolan})}
+                      className={`w-10 h-5 rounded-full transition-colors relative flex-shrink-0 ${admixture.usePozzolan ? 'bg-blue-500' : 'bg-[#34495e]'}`}
+                    >
+                      <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${admixture.usePozzolan ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-200 uppercase tracking-wider">Reemplazo por Puzolana</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">Microsílice, ceniza volante u otro material cementante que sustituye parcialmente al cemento</p>
+                    </div>
+                  </label>
+                  {admixture.usePozzolan && (
+                    <div className="pl-4 border-l-2 border-blue-500/40 grid grid-cols-2 gap-4">
+                      <InputField
+                        type="number"
+                        label="Reemplazo de Cemento (%)"
+                        tooltip="Porcentaje en masa del cemento que será reemplazado por la puzolana. Rango típico: 5–30%."
+                        value={admixture.pozzolanReplacementPct}
+                        onChange={e => setAdmixture({...admixture, pozzolanReplacementPct: parseFloat(e.target.value) || 0})}
+                        min="1"
+                        max="50"
+                      />
+                      <InputField
+                        type="number"
+                        label="Peso Específico Puzolana (kg/m³)"
+                        tooltip="Densidad de la puzolana. Microsílice: ~2200 kg/m³. Ceniza volante: ~2300 kg/m³. Escoria: ~2900 kg/m³."
+                        value={admixture.pePozzolan}
+                        onChange={e => setAdmixture({...admixture, pePozzolan: parseFloat(e.target.value) || 2200})}
+                        min="1000"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {!admixture.useWaterReducer && !admixture.usePozzolan && (
+                  <p className="text-[10px] text-slate-600 text-center py-2">
+                    Los aditivos son opcionales. Actívalos con los interruptores para incluirlos en el cálculo.
+                  </p>
+                )}
               </div>
             )}
 

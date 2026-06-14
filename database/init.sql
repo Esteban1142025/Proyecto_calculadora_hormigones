@@ -41,6 +41,13 @@ CREATE TABLE IF NOT EXISTS consultas (
   tmn           VARCHAR(8) NOT NULL DEFAULT '1',
   puc           NUMERIC   NOT NULL DEFAULT 1600,
 
+  -- Aditivos (opcionales)
+  use_water_reducer       BOOLEAN  NOT NULL DEFAULT FALSE,
+  water_reduction_pct     NUMERIC  NOT NULL DEFAULT 0,
+  use_pozzolan            BOOLEAN  NOT NULL DEFAULT FALSE,
+  pozzolan_replacement_pct NUMERIC NOT NULL DEFAULT 0,
+  pe_pozzolan             NUMERIC  NOT NULL DEFAULT 2200,
+
   created_at    TIMESTAMP DEFAULT NOW(),
   updated_at    TIMESTAMP DEFAULT NOW()
 );

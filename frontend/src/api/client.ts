@@ -3,6 +3,7 @@ import type {
   CementInputs,
   FineAggregateInputs,
   CoarseAggregateInputs,
+  AdmixtureInputs,
   TMN,
 } from '../utils/calculator';
 
@@ -75,6 +76,11 @@ export interface ConsultaDB extends ConsultaResumen {
   absag: number;
   tmn: string;
   puc: number;
+  use_water_reducer: boolean;
+  water_reduction_pct: number;
+  use_pozzolan: boolean;
+  pozzolan_replacement_pct: number;
+  pe_pozzolan: number;
 }
 
 export const apiGetConsultas = () => request<ConsultaResumen[]>('/consultas');
@@ -94,6 +100,7 @@ export function inputsToDbFormat(
   cement: CementInputs,
   fine: FineAggregateInputs,
   coarse: CoarseAggregateInputs,
+  admixture: AdmixtureInputs,
 ) {
   return {
     nombre,
@@ -116,6 +123,11 @@ export function inputsToDbFormat(
     absag: coarse.absag,
     tmn:   coarse.tmn,
     puc:   coarse.puc,
+    use_water_reducer:        admixture.useWaterReducer,
+    water_reduction_pct:      admixture.waterReductionPct,
+    use_pozzolan:             admixture.usePozzolan,
+    pozzolan_replacement_pct: admixture.pozzolanReplacementPct,
+    pe_pozzolan:              admixture.pePozzolan,
   };
 }
 
@@ -146,5 +158,12 @@ export function dbToInputsFormat(row: ConsultaDB) {
       tmn:   row.tmn as TMN,
       puc:   Number(row.puc),
     } satisfies CoarseAggregateInputs,
+    admixture: {
+      useWaterReducer:        Boolean(row.use_water_reducer),
+      waterReductionPct:      Number(row.water_reduction_pct),
+      usePozzolan:            Boolean(row.use_pozzolan),
+      pozzolanReplacementPct: Number(row.pozzolan_replacement_pct),
+      pePozzolan:             Number(row.pe_pozzolan) || 2200,
+    } satisfies AdmixtureInputs,
   };
 }

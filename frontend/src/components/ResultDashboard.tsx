@@ -52,18 +52,24 @@ export const ResultDashboard: React.FC<ResultDashboardProps> = ({ results, isVal
             <div className="absolute top-0 right-0 text-[10px] opacity-50 uppercase tracking-widest blinking-cursor">CÁLCULO_COMPLETO</div>
             <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs md:text-sm mt-4">
               <div className="flex justify-between border-b border-[#1a2421]/20 pb-1">
-                <span className="opacity-80">CEMENTO</span>
-                <span className="font-bold text-base">{results.cement} <span className="text-[10px] opacity-70">kg</span></span>
+                <span className="opacity-80">{results.pozzolan > 0 ? 'CEMENTO NETO' : 'CEMENTO'}</span>
+                <span className="font-bold text-base">{results.cementNet} <span className="text-[10px] opacity-70">kg</span></span>
               </div>
               <div className="flex justify-between border-b border-[#1a2421]/20 pb-1">
                 <span className="opacity-80">AGUA</span>
                 <span className="font-bold text-base">{results.h2oCorr} <span className="text-[10px] opacity-70">kg</span></span>
               </div>
+              {results.pozzolan > 0 && (
+                <div className="flex justify-between border-b border-[#1a2421]/20 pb-1">
+                  <span className="opacity-80">PUZOLANA</span>
+                  <span className="font-bold text-base">{results.pozzolan} <span className="text-[10px] opacity-70">kg</span></span>
+                </div>
+              )}
               <div className="flex justify-between border-b border-[#1a2421]/20 pb-1">
                 <span className="opacity-80">ÁR. FINO</span>
                 <span className="font-bold text-base">{results.afCorr} <span className="text-[10px] opacity-70">kg</span></span>
               </div>
-              <div className="flex justify-between border-b border-[#1a2421]/20 pb-1">
+              <div className={`flex justify-between border-b border-[#1a2421]/20 pb-1 ${results.pozzolan > 0 ? 'col-span-2' : ''}`}>
                 <span className="opacity-80">ÁR. GRUESO</span>
                 <span className="font-bold text-base">{results.agCorr} <span className="text-[10px] opacity-70">kg</span></span>
               </div>

@@ -9,7 +9,8 @@ const CAMPOS_CONSULTA = [
   'nombre', 'fcr_type', 'fc', 's', 'data_count', 'fcr_input',
   'slump_cm', 'has_air', 'exposure', 'freeze_thaw',
   'pec', 'peaf', 'haf', 'absaf', 'mf',
-  'peag', 'hag', 'absag', 'tmn', 'puc'
+  'peag', 'hag', 'absag', 'tmn', 'puc',
+  'use_water_reducer', 'water_reduction_pct', 'use_pozzolan', 'pozzolan_replacement_pct', 'pe_pozzolan'
 ];
 
 // GET /api/consultas — listar todas las consultas del usuario

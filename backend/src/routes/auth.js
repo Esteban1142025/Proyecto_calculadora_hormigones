@@ -12,6 +12,10 @@ router.post('/register', async (req, res) => {
   if (!nombre || !email || !password)
     return res.status(400).json({ error: 'Nombre, email y contraseña son obligatorios' });
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email))
+    return res.status(400).json({ error: 'El formato del email no es válido' });
+
   if (password.length < 6)
     return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
 
@@ -27,7 +31,8 @@ router.post('/register', async (req, res) => {
     );
 
     const usuario = result.rows[0];
-    const token = jwt.sign({ id: usuario.id, email: usuario.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const secret = process.env.JWT_SECRET || 'secret_de_desarrollo_por_defecto_211';
+    const token = jwt.sign({ id: usuario.id, email: usuario.email }, secret, { expiresIn: '7d' });
 
     res.status(201).json({ token, usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email } });
   } catch (err) {
@@ -43,6 +48,10 @@ router.post('/login', async (req, res) => {
   if (!email || !password)
     return res.status(400).json({ error: 'Email y contraseña son obligatorios' });
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email))
+    return res.status(400).json({ error: 'El formato del email no es válido' });
+
   try {
     const result = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
     if (result.rows.length === 0)
@@ -53,7 +62,8 @@ router.post('/login', async (req, res) => {
     if (!valido)
       return res.status(401).json({ error: 'Credenciales incorrectas' });
 
-    const token = jwt.sign({ id: usuario.id, email: usuario.email }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const secret = process.env.JWT_SECRET || 'secret_de_desarrollo_por_defecto_211';
+    const token = jwt.sign({ id: usuario.id, email: usuario.email }, secret, { expiresIn: '7d' });
 
     res.json({ token, usuario: { id: usuario.id, nombre: usuario.nombre, email: usuario.email } });
   } catch (err) {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { X, Save, FolderOpen, Trash2, Loader2, BookOpen } from 'lucide-react';
+import { X, Save, FolderOpen, Trash2, Loader2, BookOpen, Download } from 'lucide-react';
 import {
   apiGetConsultas,
   apiGetConsulta,
@@ -10,12 +10,13 @@ import {
   type ConsultaResumen,
   type ConsultaDB,
 } from '../api/client';
-import type {
-  ConcreteInputs,
-  CementInputs,
-  FineAggregateInputs,
-  CoarseAggregateInputs,
-  AdmixtureInputs,
+import {
+  calculateMixDesign,
+  type ConcreteInputs,
+  type CementInputs,
+  type FineAggregateInputs,
+  type CoarseAggregateInputs,
+  type AdmixtureInputs,
 } from '../utils/calculator';
 
 interface ConsultasPanelProps {
@@ -44,6 +45,7 @@ export function ConsultasPanel({
   const [guardando, setGuardando] = useState(false);
   const [eliminando, setEliminando] = useState<number | null>(null);
   const [cargandoId, setCargandoId] = useState<number | null>(null);
+  const [descargandoId, setDescargandoId] = useState<number | null>(null);
   const [mostrarFormGuardar, setMostrarFormGuardar] = useState(false);
   const [nombreNueva, setNombreNueva] = useState('');
   const [error, setError] = useState('');
@@ -105,6 +107,23 @@ export function ConsultasPanel({
       setError('No se pudo cargar la consulta');
     } finally {
       setCargandoId(null);
+    }
+  }
+
+  async function handleDescargarPDF(id: number, nombre: string) {
+    setDescargandoId(id);
+    setError('');
+    try {
+      const row = await apiGetConsulta(id) as ConsultaDB;
+      const inputs = dbToInputsFormat(row);
+      const results = calculateMixDesign(inputs);
+      const { generatePDFReport } = await import('../utils/pdfGenerator');
+      generatePDFReport(inputs.concrete, inputs.cement, inputs.fineAggregate, inputs.coarseAggregate, inputs.admixture, results, nombre);
+    } catch (err: unknown) {
+      console.error(err);
+      setError('No se pudo generar el PDF de esta consulta');
+    } finally {
+      setDescargandoId(null);
     }
   }
 
@@ -250,7 +269,7 @@ export function ConsultasPanel({
               <div
                 key={c.id}
                 className="bg-[#1a252f] border border-[#2c3e50] rounded-lg p-3
-                  hover:border-[#4b6584] transition-colors"
+                  hover:border-[#4b6584] transition-colors flex flex-col"
               >
                 <div className="flex items-start justify-between gap-2 mb-1">
                   <span className="text-white text-xs font-semibold leading-tight flex-1 min-w-0 truncate">
@@ -274,6 +293,19 @@ export function ConsultasPanel({
                       : <FolderOpen className="w-3 h-3" />
                     }
                     Cargar
+                  </button>
+                  <button
+                    onClick={() => handleDescargarPDF(c.id, c.nombre)}
+                    disabled={descargandoId === c.id}
+                    title="Descargar PDF directamente"
+                    className="flex items-center justify-center px-2 py-1.5
+                      bg-[#2c3e50] hover:bg-[#34495e] text-green-500 hover:text-green-400
+                      rounded disabled:opacity-50 transition-colors"
+                  >
+                    {descargandoId === c.id
+                      ? <Loader2 className="w-3 h-3 animate-spin" />
+                      : <Download className="w-3 h-3" />
+                    }
                   </button>
                   <button
                     onClick={() => handleEliminar(c.id, c.nombre)}

@@ -56,24 +56,29 @@ export function Calculadora() {
   const missingFields = useMemo(() => {
     const missing: string[] = [];
     if (concrete.fcrType === 'E') {
-      if (concrete.fc < 0) missing.push("f'c (MPa)");
-      if (concrete.s < 0) missing.push('Desviación Estándar');
-      if (concrete.dataCount < 0) missing.push('Número de Ensayos');
+      if (concrete.fc < 15 || concrete.fc > 60) missing.push("f'c");
+      if (concrete.s < 0 || concrete.s > 15) missing.push('Desv. Estándar');
+      if (concrete.s > 0 && (concrete.dataCount < 1 || concrete.dataCount > 100)) missing.push('Nº Ensayos');
     } else {
-      if (concrete.fcrInput <= 0) missing.push("f'cr (MPa)");
+      if (concrete.fcrInput < 15 || concrete.fcrInput > 80) missing.push("f'cr");
     }
-    if (concrete.slumpCm <= 0) missing.push('Asentamiento / Slump');
-    if (cement.pec <= 0) missing.push('Peso Específico del Cemento');
-    if (fineAggregate.peaf <= 0) missing.push('Peso Específico Árido Fino');
-    if (fineAggregate.haf < 0) missing.push('Humedad Árido Fino');
-    if (fineAggregate.absaf < 0) missing.push('Absorción Árido Fino');
-    if (fineAggregate.mf < 0) missing.push('Módulo de Finura');
-    if (coarseAggregate.peag <= 0) missing.push('Peso Específico Árido Grueso');
-    if (coarseAggregate.hag < 0) missing.push('Humedad Árido Grueso');
-    if (coarseAggregate.absag < 0) missing.push('Absorción Árido Grueso');
-    if (coarseAggregate.puc <= 0) missing.push('Peso Unitario Compactado');
+    if (concrete.slumpCm < 2 || concrete.slumpCm > 25) missing.push('Asentamiento');
+    if (cement.pec < 2000 || cement.pec > 3500) missing.push('P.E. Cemento');
+    if (fineAggregate.peaf < 2000 || fineAggregate.peaf > 3200) missing.push('P.E. Árido Fino');
+    if (fineAggregate.haf < 0 || fineAggregate.haf > 20) missing.push('Humedad A.F.');
+    if (fineAggregate.absaf < 0 || fineAggregate.absaf > 15) missing.push('Absorción A.F.');
+    if (fineAggregate.mf < 2 || fineAggregate.mf > 4) missing.push('Módulo Finura');
+    if (coarseAggregate.peag < 2000 || coarseAggregate.peag > 3200) missing.push('P.E. Árido Grueso');
+    if (coarseAggregate.hag < 0 || coarseAggregate.hag > 20) missing.push('Humedad A.G.');
+    if (coarseAggregate.absag < 0 || coarseAggregate.absag > 15) missing.push('Absorción A.G.');
+    if (coarseAggregate.puc < 1000 || coarseAggregate.puc > 2500) missing.push('P.U.C.');
+    
+    if (admixture.useWaterReducer && (admixture.waterReductionPct < 1 || admixture.waterReductionPct > 40)) missing.push('Reductor Agua');
+    if (admixture.usePozzolan && (admixture.pozzolanReplacementPct < 1 || admixture.pozzolanReplacementPct > 50)) missing.push('% Puzolana');
+    if (admixture.usePozzolan && (admixture.pePozzolan < 1000 || admixture.pePozzolan > 3500)) missing.push('P.E. Puzolana');
+    
     return missing;
-  }, [concrete, cement, fineAggregate, coarseAggregate]);
+  }, [concrete, cement, fineAggregate, coarseAggregate, admixture]);
 
   const isValid = missingFields.length === 0;
 
@@ -97,6 +102,25 @@ export function Calculadora() {
   function handleLogout() {
     logout();
     navigate('/login', { replace: true });
+  }
+
+  async function handleDownloadPDF() {
+    if (!results || !isValid) return;
+    try {
+      const { generatePDFReport } = await import('../utils/pdfGenerator');
+      generatePDFReport(
+        concrete,
+        cement,
+        fineAggregate,
+        coarseAggregate,
+        admixture,
+        results,
+        usuario?.nombre
+      );
+    } catch (err) {
+      console.error("Error al generar PDF:", err);
+      alert("Hubo un error al preparar el PDF. Intenta de nuevo.");
+    }
   }
 
   return (
@@ -156,7 +180,12 @@ export function Calculadora() {
         </div>
 
         {/* Screen */}
-        <ResultDashboard results={results} isValid={isValid} missingFields={missingFields} />
+        <ResultDashboard 
+          results={results} 
+          isValid={isValid} 
+          missingFields={missingFields} 
+          onDownloadPDF={handleDownloadPDF}
+        />
 
         {/* Brand Bar */}
         <div className="flex justify-between items-end mb-4 border-b border-[#34495e] pb-2">
@@ -197,8 +226,9 @@ export function Calculadora() {
                       tooltip="Resistencia especificada a la compresión del hormigón a 28 días, indicada en el proyecto estructural."
                       value={concrete.fc}
                       onChange={value => setConcrete({...concrete, fc: value})}
-                      error={concrete.fc < 0 ? "Error" : undefined}
-                      min={0}
+                      error={concrete.fc < 15 || concrete.fc > 60 ? "Rango: 15 - 60" : undefined}
+                      min={15}
+                      max={60}
                       allowDecimals={true}
                       step={1}
                     />
@@ -207,8 +237,9 @@ export function Calculadora() {
                       tooltip="Variabilidad estadística obtenida de ensayos de resistencia previos con el mismo tipo de hormigón. Ingresa 0 si no tienes registros."
                       value={concrete.s}
                       onChange={value => setConcrete({...concrete, s: value})}
-                      error={concrete.s < 0 ? "Error" : undefined}
+                      error={concrete.s < 0 || concrete.s > 15 ? "Rango: 0 - 15" : undefined}
                       min={0}
+                      max={15}
                       allowDecimals={true}
                       step={1}
                     />
@@ -218,8 +249,9 @@ export function Calculadora() {
                         tooltip="Cantidad de ensayos de compresión que respaldan la desviación estándar ingresada. Con menos de 15 ensayos, el ACI 211.1 ignora la desviación estándar."
                         value={concrete.dataCount}
                         onChange={value => setConcrete({...concrete, dataCount: value})}
-                        error={concrete.dataCount < 0 ? "Error" : undefined}
-                        min={0}
+                        error={concrete.dataCount < 1 || concrete.dataCount > 100 ? "Rango: 1 - 100" : undefined}
+                        min={1}
+                        max={100}
                         allowDecimals={false}
                         step={1}
                       />
@@ -231,8 +263,9 @@ export function Calculadora() {
                     tooltip="Resistencia requerida de diseño: ya incluye el margen de seguridad sobre el f'c. Se usa cuando el proyectista la define directamente."
                     value={concrete.fcrInput}
                     onChange={value => setConcrete({...concrete, fcrInput: value})}
-                    error={concrete.fcrInput < 0 ? "Error" : undefined}
-                    min={0}
+                    error={concrete.fcrInput < 15 || concrete.fcrInput > 80 ? "Rango: 15 - 80" : undefined}
+                    min={15}
+                    max={80}
                     allowDecimals={true}
                     step={1}
                   />
@@ -243,8 +276,9 @@ export function Calculadora() {
                   tooltip="Medida de la trabajabilidad del hormigón fresco. Mayor valor indica mezcla más fluida. Rango típico: 5–15 cm."
                   value={concrete.slumpCm}
                   onChange={value => setConcrete({...concrete, slumpCm: value})}
-                  error={concrete.slumpCm <= 0 ? "Error" : undefined}
-                  min={0.1}
+                  error={concrete.slumpCm < 2 || concrete.slumpCm > 25 ? "Rango: 2 - 25" : undefined}
+                  min={2}
+                  max={25}
                   allowDecimals={true}
                   step={1}
                 />
@@ -293,8 +327,9 @@ export function Calculadora() {
                   tooltip="Densidad del cemento. Valor típico para cemento Portland: 3150 kg/m³."
                   value={cement.pec}
                   onChange={value => setCement({...cement, pec: value})}
-                  error={cement.pec <= 0 ? "Error" : undefined}
-                  min={0}
+                  error={cement.pec < 2000 || cement.pec > 3500 ? "Rango: 2000 - 3500" : undefined}
+                  min={2000}
+                  max={3500}
                   allowDecimals={true}
                   step={1}
                 />
@@ -308,8 +343,9 @@ export function Calculadora() {
                   tooltip="Densidad de las partículas del árido fino, obtenida en laboratorio. Valor típico: 2600 kg/m³."
                   value={fineAggregate.peaf}
                   onChange={value => setFineAggregate({...fineAggregate, peaf: value})}
-                  error={fineAggregate.peaf <= 0 ? "Error" : undefined}
-                  min={0}
+                  error={fineAggregate.peaf < 2000 || fineAggregate.peaf > 3200 ? "Rango: 2000 - 3200" : undefined}
+                  min={2000}
+                  max={3200}
                   allowDecimals={true}
                   step={1}
                 />
@@ -318,8 +354,9 @@ export function Calculadora() {
                   tooltip="Porcentaje de agua libre en la superficie de las partículas, medida en el árido tal como llega a obra. Puede ser positiva (húmedo) o cero (seco)."
                   value={fineAggregate.haf}
                   onChange={value => setFineAggregate({...fineAggregate, haf: value})}
-                  error={fineAggregate.haf < 0 ? "Error" : undefined}
+                  error={fineAggregate.haf < 0 || fineAggregate.haf > 20 ? "Rango: 0 - 20" : undefined}
                   min={0}
+                  max={20}
                   allowDecimals={true}
                   step={1}
                 />
@@ -328,8 +365,9 @@ export function Calculadora() {
                   tooltip="Porcentaje de agua que el árido puede absorber hasta saturarse. Se obtiene en laboratorio y se usa para corregir el agua de la mezcla."
                   value={fineAggregate.absaf}
                   onChange={value => setFineAggregate({...fineAggregate, absaf: value})}
-                  error={fineAggregate.absaf < 0 ? "Error" : undefined}
+                  error={fineAggregate.absaf < 0 || fineAggregate.absaf > 15 ? "Rango: 0 - 15" : undefined}
                   min={0}
+                  max={15}
                   allowDecimals={true}
                   step={1}
                 />
@@ -338,8 +376,9 @@ export function Calculadora() {
                   tooltip="Índice de granulometría del árido fino. Valor entre 2.3 y 3.1. A mayor valor, arena más gruesa. Se calcula sumando los porcentajes retenidos acumulados en tamices normalizados y dividiendo por 100."
                   value={fineAggregate.mf}
                   onChange={value => setFineAggregate({...fineAggregate, mf: value})}
-                  error={fineAggregate.mf < 0 ? "Error" : undefined}
-                  min={0}
+                  error={fineAggregate.mf < 2 || fineAggregate.mf > 4 ? "Rango: 2.0 - 4.0" : undefined}
+                  min={2}
+                  max={4}
                   allowDecimals={true}
                   step={0.1}
                   tooltipWidth="w-72"
@@ -354,8 +393,9 @@ export function Calculadora() {
                   tooltip="Densidad de las partículas del árido grueso, obtenida en laboratorio. Valor típico: 2650 kg/m³."
                   value={coarseAggregate.peag}
                   onChange={value => setCoarseAggregate({...coarseAggregate, peag: value})}
-                  error={coarseAggregate.peag <= 0 ? "Error" : undefined}
-                  min={0}
+                  error={coarseAggregate.peag < 2000 || coarseAggregate.peag > 3200 ? "Rango: 2000 - 3200" : undefined}
+                  min={2000}
+                  max={3200}
                   allowDecimals={true}
                   step={1}
                 />
@@ -364,8 +404,9 @@ export function Calculadora() {
                   tooltip="Porcentaje de agua libre en la superficie de las partículas, medida en el árido tal como llega a obra."
                   value={coarseAggregate.hag}
                   onChange={value => setCoarseAggregate({...coarseAggregate, hag: value})}
-                  error={coarseAggregate.hag < 0 ? "Error" : undefined}
+                  error={coarseAggregate.hag < 0 || coarseAggregate.hag > 20 ? "Rango: 0 - 20" : undefined}
                   min={0}
+                  max={20}
                   allowDecimals={true}
                   step={1}
                 />
@@ -374,8 +415,9 @@ export function Calculadora() {
                   tooltip="Porcentaje de agua que el árido puede absorber hasta saturarse. Se obtiene en laboratorio."
                   value={coarseAggregate.absag}
                   onChange={value => setCoarseAggregate({...coarseAggregate, absag: value})}
-                  error={coarseAggregate.absag < 0 ? "Error" : undefined}
+                  error={coarseAggregate.absag < 0 || coarseAggregate.absag > 15 ? "Rango: 0 - 15" : undefined}
                   min={0}
+                  max={15}
                   allowDecimals={true}
                   step={1}
                 />
@@ -399,8 +441,9 @@ export function Calculadora() {
                   tooltip="Masa del árido grueso por unidad de volumen, compactado con varilla según norma. Se usa para calcular el volumen de árido grueso por m³ de hormigón."
                   value={coarseAggregate.puc}
                   onChange={value => setCoarseAggregate({...coarseAggregate, puc: value})}
-                  error={coarseAggregate.puc <= 0 ? "Error" : undefined}
-                  min={0}
+                  error={coarseAggregate.puc < 1000 || coarseAggregate.puc > 2500 ? "Rango: 1000 - 2500" : undefined}
+                  min={1000}
+                  max={2500}
                   allowDecimals={true}
                   step={1}
                 />
@@ -431,8 +474,9 @@ export function Calculadora() {
                         tooltip="Porcentaje de reducción de agua que ofrece el aditivo según ficha técnica del fabricante. Plastificantes: 5–15%. Superplastificantes: 15–30%."
                         value={admixture.waterReductionPct}
                         onChange={value => setAdmixture({...admixture, waterReductionPct: value})}
+                        error={admixture.waterReductionPct < 1 || admixture.waterReductionPct > 40 ? "Rango: 1 - 40" : undefined}
                         min={1}
-                        max={30}
+                        max={40}
                         allowDecimals={true}
                         step={1}
                       />
@@ -463,6 +507,7 @@ export function Calculadora() {
                         tooltip="Porcentaje en masa del cemento que será reemplazado por la puzolana. Rango típico: 5–30%."
                         value={admixture.pozzolanReplacementPct}
                         onChange={value => setAdmixture({...admixture, pozzolanReplacementPct: value})}
+                        error={admixture.pozzolanReplacementPct < 1 || admixture.pozzolanReplacementPct > 50 ? "Rango: 1 - 50" : undefined}
                         min={1}
                         max={50}
                         allowDecimals={true}
@@ -473,7 +518,9 @@ export function Calculadora() {
                         tooltip="Densidad de la puzolana. Microsílice: ~2200 kg/m³. Ceniza volante: ~2300 kg/m³. Escoria: ~2900 kg/m³."
                         value={admixture.pePozzolan}
                         onChange={value => setAdmixture({...admixture, pePozzolan: value})}
+                        error={admixture.pePozzolan < 1000 || admixture.pePozzolan > 3500 ? "Rango: 1000 - 3500" : undefined}
                         min={1000}
+                        max={3500}
                         allowDecimals={true}
                         step={1}
                       />

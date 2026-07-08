@@ -72,17 +72,17 @@ export const NumberInput: React.FC<NumberInputProps> = ({
 
   const handleIncrement = () => {
     setTouched(true);
-    const newValue = value + step;
-    if (maxValue !== undefined && newValue > maxValue) return;
-    if (minValue !== undefined && newValue < minValue) return;
+    let newValue = value + step;
+    if (minValue !== undefined && value < minValue) newValue = minValue;
+    else if (maxValue !== undefined && newValue > maxValue) newValue = maxValue;
     onChange(newValue);
   };
 
   const handleDecrement = () => {
     setTouched(true);
-    const newValue = value - step;
-    if (minValue !== undefined && newValue < minValue) return;
-    if (maxValue !== undefined && newValue > maxValue) return;
+    let newValue = value - step;
+    if (maxValue !== undefined && value > maxValue) newValue = maxValue;
+    else if (minValue !== undefined && newValue < minValue) newValue = minValue;
     onChange(newValue);
   };
 
@@ -90,15 +90,13 @@ export const NumberInput: React.FC<NumberInputProps> = ({
     setTouched(true);
     const inputValue = e.target.value;
     if (inputValue === '' || inputValue === '-') {
+      // Si el usuario borra todo, lo dejamos en 0 para que no se rompa el estado numérico
+      onChange(0);
       return;
     }
     
     const numValue = allowDecimals ? parseFloat(inputValue) : parseInt(inputValue, 10);
-    
     if (isNaN(numValue)) return;
-    
-    if (minValue !== undefined && numValue < minValue) return;
-    if (maxValue !== undefined && numValue > maxValue) return;
     
     onChange(numValue);
   };
@@ -107,6 +105,8 @@ export const NumberInput: React.FC<NumberInputProps> = ({
     setTouched(true);
     if (minValue !== undefined && value < minValue) {
       onChange(minValue);
+    } else if (maxValue !== undefined && value > maxValue) {
+      onChange(maxValue);
     }
   };
 

@@ -18,6 +18,12 @@ export function Register() {
     e.preventDefault();
     setError('');
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('El formato del email no es válido');
+      return;
+    }
+
     if (password.length < 6) {
       setError('La contraseña debe tener al menos 6 caracteres');
       return;

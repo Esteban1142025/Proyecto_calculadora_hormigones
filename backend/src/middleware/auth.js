@@ -8,7 +8,8 @@ module.exports = function verificarToken(req, res, next) {
   if (!token) return res.status(401).json({ error: 'Token inválido' });
 
   try {
-    req.usuario = jwt.verify(token, process.env.JWT_SECRET);
+    const secret = process.env.JWT_SECRET || 'secret_de_desarrollo_por_defecto_211';
+    req.usuario = jwt.verify(token, secret);
     next();
   } catch {
     return res.status(401).json({ error: 'Token expirado o inválido' });

@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings, BookOpen, LogOut } from 'lucide-react';
-import { InputField, SelectField } from '../components/InputField';
+import { SelectField, NumberInput } from '../components/InputField';
 import { ResultDashboard } from '../components/ResultDashboard';
 import { ConsultasPanel } from '../components/ConsultasPanel';
 import { useAuth } from '../context/AuthContext';
@@ -15,33 +15,33 @@ export function Calculadora() {
 
   const [concrete, setConcrete] = useState<CalculatorInputs['concrete']>({
     fcrType: 'E',
-    fc: 21,
+    fc: 0,
     s: 0,
     dataCount: 0,
     fcrInput: 0,
-    slumpCm: 10,
+    slumpCm: 0,
     hasAir: false,
     exposure: 1,
     freezeThaw: false,
   });
 
   const [cement, setCement] = useState<CalculatorInputs['cement']>({
-    pec: 3150,
+    pec: 0,
   });
 
   const [fineAggregate, setFineAggregate] = useState<CalculatorInputs['fineAggregate']>({
-    peaf: 2600,
-    haf: 5,
-    absaf: 2,
-    mf: 2.8,
+    peaf: 0,
+    haf: 0,
+    absaf: 0,
+    mf: 0,
   });
 
   const [coarseAggregate, setCoarseAggregate] = useState<CalculatorInputs['coarseAggregate']>({
-    peag: 2650,
-    hag: 2,
-    absag: 1,
+    peag: 0,
+    hag: 0,
+    absag: 0,
     tmn: '1',
-    puc: 1600,
+    puc: 0,
   });
 
   const [admixture, setAdmixture] = useState<AdmixtureInputs>({
@@ -49,7 +49,7 @@ export function Calculadora() {
     waterReductionPct: 0,
     usePozzolan: false,
     pozzolanReplacementPct: 0,
-    pePozzolan: 2200,
+    pePozzolan: 0,
   });
 
   // Validación
@@ -192,56 +192,61 @@ export function Calculadora() {
 
                 {concrete.fcrType === 'E' ? (
                   <>
-                    <InputField
-                      type="number"
+                    <NumberInput
                       label="f'c (MPa)"
                       tooltip="Resistencia especificada a la compresión del hormigón a 28 días, indicada en el proyecto estructural."
                       value={concrete.fc}
-                      onChange={e => setConcrete({...concrete, fc: parseFloat(e.target.value) || 0})}
+                      onChange={value => setConcrete({...concrete, fc: value})}
                       error={concrete.fc < 0 ? "Error" : undefined}
-                      min="0"
+                      min={0}
+                      allowDecimals={true}
+                      step={1}
                     />
-                    <InputField
-                      type="number"
+                    <NumberInput
                       label="Desviación Estándar (s)"
                       tooltip="Variabilidad estadística obtenida de ensayos de resistencia previos con el mismo tipo de hormigón. Ingresa 0 si no tienes registros."
                       value={concrete.s}
-                      onChange={e => setConcrete({...concrete, s: parseFloat(e.target.value) || 0})}
+                      onChange={value => setConcrete({...concrete, s: value})}
                       error={concrete.s < 0 ? "Error" : undefined}
-                      min="0"
+                      min={0}
+                      allowDecimals={true}
+                      step={1}
                     />
                     {concrete.s > 0 && (
-                      <InputField
-                        type="number"
+                      <NumberInput
                         label="Número de Ensayos"
                         tooltip="Cantidad de ensayos de compresión que respaldan la desviación estándar ingresada. Con menos de 15 ensayos, el ACI 211.1 ignora la desviación estándar."
                         value={concrete.dataCount}
-                        onChange={e => setConcrete({...concrete, dataCount: parseInt(e.target.value) || 0})}
+                        onChange={value => setConcrete({...concrete, dataCount: value})}
                         error={concrete.dataCount < 0 ? "Error" : undefined}
-                        min="0"
+                        min={0}
+                        allowDecimals={false}
+                        step={1}
                       />
                     )}
                   </>
                 ) : (
-                  <InputField
-                    type="number"
+                  <NumberInput
                     label="f'cr (MPa)"
                     tooltip="Resistencia requerida de diseño: ya incluye el margen de seguridad sobre el f'c. Se usa cuando el proyectista la define directamente."
                     value={concrete.fcrInput}
-                    onChange={e => setConcrete({...concrete, fcrInput: parseFloat(e.target.value) || 0})}
+                    onChange={value => setConcrete({...concrete, fcrInput: value})}
                     error={concrete.fcrInput < 0 ? "Error" : undefined}
-                    min="0"
+                    min={0}
+                    allowDecimals={true}
+                    step={1}
                   />
                 )}
 
-                <InputField
-                  type="number"
+                <NumberInput
                   label="Asentamiento / Slump (cm)"
                   tooltip="Medida de la trabajabilidad del hormigón fresco. Mayor valor indica mezcla más fluida. Rango típico: 5–15 cm."
                   value={concrete.slumpCm}
-                  onChange={e => setConcrete({...concrete, slumpCm: parseFloat(e.target.value) || 0})}
+                  onChange={value => setConcrete({...concrete, slumpCm: value})}
                   error={concrete.slumpCm <= 0 ? "Error" : undefined}
-                  min="0.1"
+                  min={0.1}
+                  allowDecimals={true}
+                  step={1}
                 />
 
                 <SelectField
@@ -283,79 +288,95 @@ export function Calculadora() {
 
             {activeTab === 'cement' && (
               <div className="grid grid-cols-2 gap-4">
-                <InputField
-                  type="number"
+                <NumberInput
                   label="Peso Específico (kg/m³)"
                   tooltip="Densidad del cemento. Valor típico para cemento Portland: 3150 kg/m³."
                   value={cement.pec}
-                  onChange={e => setCement({...cement, pec: parseFloat(e.target.value) || 0})}
+                  onChange={value => setCement({...cement, pec: value})}
                   error={cement.pec <= 0 ? "Error" : undefined}
+                  min={0}
+                  allowDecimals={true}
+                  step={1}
                 />
               </div>
             )}
 
             {activeTab === 'fine' && (
               <div className="grid grid-cols-2 gap-4">
-                <InputField
-                  type="number"
+                <NumberInput
                   label="Peso Específico (kg/m³)"
                   tooltip="Densidad de las partículas del árido fino, obtenida en laboratorio. Valor típico: 2600 kg/m³."
                   value={fineAggregate.peaf}
-                  onChange={e => setFineAggregate({...fineAggregate, peaf: parseFloat(e.target.value) || 0})}
+                  onChange={value => setFineAggregate({...fineAggregate, peaf: value})}
                   error={fineAggregate.peaf <= 0 ? "Error" : undefined}
+                  min={0}
+                  allowDecimals={true}
+                  step={1}
                 />
-                <InputField
-                  type="number"
+                <NumberInput
                   label="Humedad Superficial (%)"
                   tooltip="Porcentaje de agua libre en la superficie de las partículas, medida en el árido tal como llega a obra. Puede ser positiva (húmedo) o cero (seco)."
                   value={fineAggregate.haf}
-                  onChange={e => setFineAggregate({...fineAggregate, haf: parseFloat(e.target.value) || 0})}
+                  onChange={value => setFineAggregate({...fineAggregate, haf: value})}
                   error={fineAggregate.haf < 0 ? "Error" : undefined}
+                  min={0}
+                  allowDecimals={true}
+                  step={1}
                 />
-                <InputField
-                  type="number"
+                <NumberInput
                   label="Absorción de Agua (%)"
                   tooltip="Porcentaje de agua que el árido puede absorber hasta saturarse. Se obtiene en laboratorio y se usa para corregir el agua de la mezcla."
                   value={fineAggregate.absaf}
-                  onChange={e => setFineAggregate({...fineAggregate, absaf: parseFloat(e.target.value) || 0})}
+                  onChange={value => setFineAggregate({...fineAggregate, absaf: value})}
                   error={fineAggregate.absaf < 0 ? "Error" : undefined}
+                  min={0}
+                  allowDecimals={true}
+                  step={1}
                 />
-                <InputField
-                  type="number"
+                <NumberInput
                   label="Módulo de Finura"
                   tooltip="Índice de granulometría del árido fino. Valor entre 2.3 y 3.1. A mayor valor, arena más gruesa. Se calcula sumando los porcentajes retenidos acumulados en tamices normalizados y dividiendo por 100."
                   value={fineAggregate.mf}
-                  onChange={e => setFineAggregate({...fineAggregate, mf: parseFloat(e.target.value) || 0})}
+                  onChange={value => setFineAggregate({...fineAggregate, mf: value})}
                   error={fineAggregate.mf < 0 ? "Error" : undefined}
+                  min={0}
+                  allowDecimals={true}
+                  step={0.1}
                 />
               </div>
             )}
 
             {activeTab === 'coarse' && (
               <div className="grid grid-cols-2 gap-4">
-                <InputField
-                  type="number"
+                <NumberInput
                   label="Peso Específico (kg/m³)"
                   tooltip="Densidad de las partículas del árido grueso, obtenida en laboratorio. Valor típico: 2650 kg/m³."
                   value={coarseAggregate.peag}
-                  onChange={e => setCoarseAggregate({...coarseAggregate, peag: parseFloat(e.target.value) || 0})}
+                  onChange={value => setCoarseAggregate({...coarseAggregate, peag: value})}
                   error={coarseAggregate.peag <= 0 ? "Error" : undefined}
+                  min={0}
+                  allowDecimals={true}
+                  step={1}
                 />
-                <InputField
-                  type="number"
+                <NumberInput
                   label="Humedad Superficial (%)"
                   tooltip="Porcentaje de agua libre en la superficie de las partículas, medida en el árido tal como llega a obra."
                   value={coarseAggregate.hag}
-                  onChange={e => setCoarseAggregate({...coarseAggregate, hag: parseFloat(e.target.value) || 0})}
+                  onChange={value => setCoarseAggregate({...coarseAggregate, hag: value})}
                   error={coarseAggregate.hag < 0 ? "Error" : undefined}
+                  min={0}
+                  allowDecimals={true}
+                  step={1}
                 />
-                <InputField
-                  type="number"
+                <NumberInput
                   label="Absorción de Agua (%)"
                   tooltip="Porcentaje de agua que el árido puede absorber hasta saturarse. Se obtiene en laboratorio."
                   value={coarseAggregate.absag}
-                  onChange={e => setCoarseAggregate({...coarseAggregate, absag: parseFloat(e.target.value) || 0})}
+                  onChange={value => setCoarseAggregate({...coarseAggregate, absag: value})}
                   error={coarseAggregate.absag < 0 ? "Error" : undefined}
+                  min={0}
+                  allowDecimals={true}
+                  step={1}
                 />
                 <SelectField
                   label="Tamaño Máximo Nominal"
@@ -372,13 +393,15 @@ export function Calculadora() {
                   <option value="3">3"</option>
                   <option value="6">6"</option>
                 </SelectField>
-                <InputField
-                  type="number"
+                <NumberInput
                   label="Peso Unitario Compactado (kg/m³)"
                   tooltip="Masa del árido grueso por unidad de volumen, compactado con varilla según norma. Se usa para calcular el volumen de árido grueso por m³ de hormigón."
                   value={coarseAggregate.puc}
-                  onChange={e => setCoarseAggregate({...coarseAggregate, puc: parseFloat(e.target.value) || 0})}
+                  onChange={value => setCoarseAggregate({...coarseAggregate, puc: value})}
                   error={coarseAggregate.puc <= 0 ? "Error" : undefined}
+                  min={0}
+                  allowDecimals={true}
+                  step={1}
                 />
               </div>
             )}
@@ -402,14 +425,15 @@ export function Calculadora() {
                   </label>
                   {admixture.useWaterReducer && (
                     <div className="pl-4 border-l-2 border-blue-500/40">
-                      <InputField
-                        type="number"
+                      <NumberInput
                         label="Reducción de Agua (%)"
                         tooltip="Porcentaje de reducción de agua que ofrece el aditivo según ficha técnica del fabricante. Plastificantes: 5–15%. Superplastificantes: 15–30%."
                         value={admixture.waterReductionPct}
-                        onChange={e => setAdmixture({...admixture, waterReductionPct: parseFloat(e.target.value) || 0})}
-                        min="1"
-                        max="30"
+                        onChange={value => setAdmixture({...admixture, waterReductionPct: value})}
+                        min={1}
+                        max={30}
+                        allowDecimals={true}
+                        step={1}
                       />
                     </div>
                   )}
@@ -433,22 +457,24 @@ export function Calculadora() {
                   </label>
                   {admixture.usePozzolan && (
                     <div className="pl-4 border-l-2 border-blue-500/40 grid grid-cols-2 gap-4">
-                      <InputField
-                        type="number"
+                      <NumberInput
                         label="Reemplazo de Cemento (%)"
                         tooltip="Porcentaje en masa del cemento que será reemplazado por la puzolana. Rango típico: 5–30%."
                         value={admixture.pozzolanReplacementPct}
-                        onChange={e => setAdmixture({...admixture, pozzolanReplacementPct: parseFloat(e.target.value) || 0})}
-                        min="1"
-                        max="50"
+                        onChange={value => setAdmixture({...admixture, pozzolanReplacementPct: value})}
+                        min={1}
+                        max={50}
+                        allowDecimals={true}
+                        step={1}
                       />
-                      <InputField
-                        type="number"
+                      <NumberInput
                         label="Peso Específico Puzolana (kg/m³)"
                         tooltip="Densidad de la puzolana. Microsílice: ~2200 kg/m³. Ceniza volante: ~2300 kg/m³. Escoria: ~2900 kg/m³."
                         value={admixture.pePozzolan}
-                        onChange={e => setAdmixture({...admixture, pePozzolan: parseFloat(e.target.value) || 2200})}
-                        min="1000"
+                        onChange={value => setAdmixture({...admixture, pePozzolan: value})}
+                        min={1000}
+                        allowDecimals={true}
+                        step={1}
                       />
                     </div>
                   )}

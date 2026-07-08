@@ -215,7 +215,7 @@ export function calculateMixDesign(inputs: CalculatorInputs): CalculatorResults 
 
   // Aditivo reductor de agua: reduce el agua de diseño antes de calcular cemento
   if (admixture.useWaterReducer && admixture.waterReductionPct > 0) {
-    h2o = Math.round(h2o * (1 - admixture.waterReductionPct / 100) * 10) / 10;
+    h2o = h2o * (1 - admixture.waterReductionPct / 100);
   }
 
   // Paso 3: a/c
@@ -240,9 +240,7 @@ export function calculateMixDesign(inputs: CalculatorInputs): CalculatorResults 
     else rel_ac = 0.45;
   }
 
-  rel_ac = Math.round(rel_ac * 1000) / 1000;
   let C = h2o / rel_ac;
-  C = Math.round(C * 1000) / 1000;
 
   // Aditivo puzolana: reemplaza una fracción del cemento
   let pozzolan = 0;
@@ -250,8 +248,8 @@ export function calculateMixDesign(inputs: CalculatorInputs): CalculatorResults 
   let pePoz = admixture.pePozzolan > 0 ? admixture.pePozzolan : 2200;
   if (pePoz < 1000) pePoz *= 1000;
   if (admixture.usePozzolan && admixture.pozzolanReplacementPct > 0) {
-    pozzolan   = Math.round(C * admixture.pozzolanReplacementPct / 100 * 1000) / 1000;
-    cementNet  = Math.round((C - pozzolan) * 1000) / 1000;
+    pozzolan   = C * admixture.pozzolanReplacementPct / 100;
+    cementNet  = C - pozzolan;
   }
 
   // Paso 4: VAG
@@ -274,12 +272,9 @@ export function calculateMixDesign(inputs: CalculatorInputs): CalculatorResults 
   else if (mf > MF3 && mf <= MF4) vag = v3 + (v4 - v3) * (mf - MF3) / (MF4 - MF3);
   else vag = v4;
 
-  vag = Math.round(vag * 1000) / 1000;
-  
   let puc = coarseAggregate.puc;
   if (puc < 1000) puc = puc * 1000;
   let ag = vag * puc;
-  ag = Math.round(ag * 1000) / 1000;
 
   // Paso 5: Peso
   let ph = 0;
@@ -308,54 +303,56 @@ export function calculateMixDesign(inputs: CalculatorInputs): CalculatorResults 
 
   // Paso 7: VAF
   let pec = cement.pec;
+  if (pec === 0) pec = 3140; // Fallback
   if (pec < 1000) pec *= 1000;
+  
   let peag = coarseAggregate.peag;
+  if (peag === 0) peag = 2650; // Fallback
   if (peag < 1000) peag *= 1000;
+  
   let peaf = fineAggregate.peaf;
+  if (peaf === 0) peaf = 2600; // Fallback
   if (peaf < 1000) peaf *= 1000;
 
   const vaf = 1 - (cementNet / pec) - (pozzolan > 0 ? pozzolan / pePoz : 0) - (h2o / 1000) - (ag / peag) - (air / 100);
   let af = vaf * peaf;
-  af = Math.round(af * 1000) / 1000;
 
   // Paso 8: HS
-  const hsaf = Math.round((fineAggregate.haf - fineAggregate.absaf) * 1000) / 1000;
-  const hsag = Math.round((coarseAggregate.hag - coarseAggregate.absag) * 1000) / 1000;
+  const hsaf = fineAggregate.haf - fineAggregate.absaf;
+  const hsag = coarseAggregate.hag - coarseAggregate.absag;
 
   // Paso 9: Corrections
-  let afCorr = af * (1 + fineAggregate.haf / 100);
-  let agCorr = ag * (1 + coarseAggregate.hag / 100);
   let h2oCorr = h2o - (af * hsaf / 100) - (ag * hsag / 100);
-
-  afCorr = Math.round(afCorr * 1000) / 1000;
-  agCorr = Math.round(agCorr * 1000) / 1000;
-  h2oCorr = Math.round(h2oCorr * 1000) / 1000;
+  let agCorr = ag * (1 + coarseAggregate.hag / 100);
+  let afCorr = ph - C - h2oCorr - agCorr;
 
   // Paso 10: Relations
-  const caf = Math.round((afCorr / C) * 1000) / 1000;
-  const cag = Math.round((agCorr / C) * 1000) / 1000;
-  const ch2o = Math.round((h2oCorr / C) * 1000) / 1000;
+  const caf = afCorr / C;
+  const cag = agCorr / C;
+  const ch2o = h2oCorr / C;
+
+  const round3 = (val: number) => Math.round(val * 1000) / 1000;
 
   return {
-    fcr: Math.round(fcr * 1000) / 1000,
-    h2o,
-    air,
-    wcr: rel_ac,
-    cement: C,
-    cementNet,
-    pozzolan,
-    vag,
-    ag,
-    ph,
-    afMalo,
-    af,
-    hsaf,
-    hsag,
-    afCorr,
-    agCorr,
-    h2oCorr,
-    caf,
-    cag,
-    ch2o
+    fcr: round3(fcr),
+    h2o: round3(h2o),
+    air: round3(air),
+    wcr: round3(rel_ac),
+    cement: round3(C),
+    cementNet: round3(cementNet),
+    pozzolan: round3(pozzolan),
+    vag: round3(vag),
+    ag: round3(ag),
+    ph: round3(ph),
+    afMalo: round3(afMalo),
+    af: round3(af),
+    hsaf: round3(hsaf),
+    hsag: round3(hsag),
+    afCorr: round3(afCorr),
+    agCorr: round3(agCorr),
+    h2oCorr: round3(h2oCorr),
+    caf: round3(caf),
+    cag: round3(cag),
+    ch2o: round3(ch2o)
   };
 }

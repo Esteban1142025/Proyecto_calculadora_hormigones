@@ -72,16 +72,16 @@ export const NumberInput: React.FC<NumberInputProps> = ({
 
   const handleIncrement = () => {
     setTouched(true);
-    let newValue = value + step;
-    if (minValue !== undefined && value < minValue) newValue = minValue;
+    let newValue = Number((value + step).toFixed(6));
+    if (minValue !== undefined && newValue < minValue) newValue = minValue;
     else if (maxValue !== undefined && newValue > maxValue) newValue = maxValue;
     onChange(newValue);
   };
 
   const handleDecrement = () => {
     setTouched(true);
-    let newValue = value - step;
-    if (maxValue !== undefined && value > maxValue) newValue = maxValue;
+    let newValue = Number((value - step).toFixed(6));
+    if (maxValue !== undefined && newValue > maxValue) newValue = maxValue;
     else if (minValue !== undefined && newValue < minValue) newValue = minValue;
     onChange(newValue);
   };

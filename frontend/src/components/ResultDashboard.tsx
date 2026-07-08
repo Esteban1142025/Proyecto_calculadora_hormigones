@@ -6,9 +6,10 @@ interface ResultDashboardProps {
   isValid: boolean;
   missingFields?: string[];
   onDownloadPDF?: () => void;
+  onLimpiar?: () => void;
 }
 
-export const ResultDashboard: React.FC<ResultDashboardProps> = ({ results, isValid, missingFields = [], onDownloadPDF }) => {
+export const ResultDashboard: React.FC<ResultDashboardProps> = ({ results, isValid, missingFields = [], onDownloadPDF, onLimpiar }) => {
   return (
     <div className="mb-6">
       {/* Solar Panel decoration */}
@@ -102,17 +103,27 @@ export const ResultDashboard: React.FC<ResultDashboardProps> = ({ results, isVal
         )}
       </div>
 
-      {isValid && results && onDownloadPDF && (
-        <div className="mt-4 flex justify-end">
+      <div className="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+        {onLimpiar && (
+          <button
+            onClick={onLimpiar}
+            className="flex items-center gap-2 bg-[#1a252f] hover:bg-red-500/20 border border-[#34495e] hover:border-red-500/50 text-slate-300 hover:text-red-400 px-4 py-2 rounded text-xs font-bold uppercase tracking-wider transition-colors shadow-md w-full sm:w-auto justify-center"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Limpiar Calculadora
+          </button>
+        )}
+
+        {isValid && results && onDownloadPDF && (
           <button
             onClick={onDownloadPDF}
-            className="flex items-center gap-2 bg-[#2c3e50] hover:bg-[#34495e] border border-[#4b6584] text-white px-4 py-2 rounded text-xs font-bold uppercase tracking-wider transition-colors shadow-md"
+            className="flex items-center gap-2 bg-[#2c3e50] hover:bg-[#34495e] border border-[#4b6584] text-white px-4 py-2 rounded text-xs font-bold uppercase tracking-wider transition-colors shadow-md w-full sm:w-auto justify-center sm:ml-auto"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             Descargar Reporte PDF
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

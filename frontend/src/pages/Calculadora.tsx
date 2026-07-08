@@ -99,6 +99,31 @@ export function Calculadora() {
     setActiveTab('concrete');
   }
 
+  function handleLimpiar() {
+    setConcrete({
+      fcrType: 'E',
+      fc: 0,
+      s: 0,
+      dataCount: 0,
+      fcrInput: 0,
+      slumpCm: 0,
+      hasAir: false,
+      exposure: 1,
+      freezeThaw: false,
+    });
+    setCement({ pec: 0 });
+    setFineAggregate({ peaf: 0, haf: 0, absaf: 0, mf: 0 });
+    setCoarseAggregate({ peag: 0, hag: 0, absag: 0, tmn: '1', puc: 0 });
+    setAdmixture({
+      useWaterReducer: false,
+      waterReductionPct: 0,
+      usePozzolan: false,
+      pozzolanReplacementPct: 0,
+      pePozzolan: 0,
+    });
+    setActiveTab('concrete');
+  }
+
   function handleLogout() {
     logout();
     navigate('/login', { replace: true });
@@ -185,6 +210,7 @@ export function Calculadora() {
           isValid={isValid} 
           missingFields={missingFields} 
           onDownloadPDF={handleDownloadPDF}
+          onLimpiar={handleLimpiar}
         />
 
         {/* Brand Bar */}

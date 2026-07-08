@@ -342,6 +342,7 @@ export function Calculadora() {
                   min={0}
                   allowDecimals={true}
                   step={0.1}
+                  tooltipWidth="w-72"
                 />
               </div>
             )}

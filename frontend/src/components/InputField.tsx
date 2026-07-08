@@ -21,7 +21,7 @@ export const InputField: React.FC<InputFieldProps> = ({ label, tooltip, error, c
         {tooltip && (
           <div className="group relative flex items-center justify-center">
             <Info className="w-3 h-3 text-slate-400 cursor-help" />
-            <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-slate-900 text-white text-[10px] rounded shadow-xl z-10 text-center border border-slate-700">
+            <div className="absolute right-0 top-full mt-2 hidden group-hover:block w-48 p-2 bg-slate-900 text-white text-[10px] rounded shadow-xl z-10 text-center border border-slate-700">
               {tooltip}
             </div>
           </div>
@@ -48,6 +48,7 @@ interface NumberInputProps extends Omit<React.InputHTMLAttributes<HTMLInputEleme
   onChange: (value: number) => void;
   allowDecimals?: boolean;
   step?: number;
+  tooltipWidth?: string;
 }
 
 export const NumberInput: React.FC<NumberInputProps> = ({ 
@@ -62,12 +63,15 @@ export const NumberInput: React.FC<NumberInputProps> = ({
   min,
   max,
   disabled,
+  tooltipWidth = 'w-48',
   ...props 
 }) => {
+  const [touched, setTouched] = React.useState(false);
   const minValue = min !== undefined ? parseFloat(min.toString()) : undefined;
   const maxValue = max !== undefined ? parseFloat(max.toString()) : undefined;
 
   const handleIncrement = () => {
+    setTouched(true);
     const newValue = value + step;
     if (maxValue !== undefined && newValue > maxValue) return;
     if (minValue !== undefined && newValue < minValue) return;
@@ -75,6 +79,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
   };
 
   const handleDecrement = () => {
+    setTouched(true);
     const newValue = value - step;
     if (minValue !== undefined && newValue < minValue) return;
     if (maxValue !== undefined && newValue > maxValue) return;
@@ -82,6 +87,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTouched(true);
     const inputValue = e.target.value;
     if (inputValue === '' || inputValue === '-') {
       return;
@@ -98,10 +104,13 @@ export const NumberInput: React.FC<NumberInputProps> = ({
   };
 
   const handleBlur = () => {
+    setTouched(true);
     if (minValue !== undefined && value < minValue) {
       onChange(minValue);
     }
   };
+
+  const shouldShowError = touched && error;
 
   return (
     <div className={cn("flex flex-col gap-1 w-full", className)}>
@@ -110,7 +119,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
         {tooltip && (
           <div className="group relative flex items-center justify-center">
             <Info className="w-3 h-3 text-slate-400 cursor-help" />
-            <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-slate-900 text-white text-[10px] rounded shadow-xl z-10 text-center border border-slate-700">
+            <div className={`absolute right-0 top-full mt-2 hidden group-hover:block ${tooltipWidth} p-2 bg-slate-900 text-white text-[10px] rounded shadow-xl z-10 text-center border border-slate-700`}>
               {tooltip}
             </div>
           </div>
@@ -136,7 +145,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
           max={max}
           className={cn(
             "flex-1 px-3 py-2 bg-[#2c3e50] border-2 shadow-inner text-white font-mono rounded outline-none transition-colors",
-            error ? "border-red-500 focus:border-red-400" : "border-[#1a252f] focus:border-[#4b6584]",
+            shouldShowError ? "border-red-500 focus:border-red-400" : "border-[#1a252f] focus:border-[#4b6584]",
             disabled && "opacity-50 cursor-not-allowed"
           )}
           {...props}
@@ -150,7 +159,7 @@ export const NumberInput: React.FC<NumberInputProps> = ({
           <Plus className="w-4 h-4" />
         </button>
       </div>
-      {error && <span className="text-[10px] text-red-400 font-bold">{error}</span>}
+      {shouldShowError && <span className="text-[10px] text-red-400 font-bold">{error}</span>}
     </div>
   );
 };
@@ -163,7 +172,7 @@ export const SelectField: React.FC<React.SelectHTMLAttributes<HTMLSelectElement>
         {tooltip && (
           <div className="group relative flex items-center justify-center">
             <Info className="w-3 h-3 text-slate-400 cursor-help" />
-            <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2 bg-slate-900 text-white text-[10px] rounded shadow-xl z-10 text-center border border-slate-700">
+            <div className="absolute right-0 top-full mt-2 hidden group-hover:block w-48 p-2 bg-slate-900 text-white text-[10px] rounded shadow-xl z-10 text-center border border-slate-700">
               {tooltip}
             </div>
           </div>

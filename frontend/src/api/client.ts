@@ -66,6 +66,7 @@ export interface ConsultaDB extends ConsultaResumen {
   has_air: boolean;
   exposure: number;
   freeze_thaw: boolean;
+  metodo_calculo?: string;
   pec: number;
   peaf: number;
   haf: number;
@@ -101,6 +102,7 @@ export function inputsToDbFormat(
   fine: FineAggregateInputs,
   coarse: CoarseAggregateInputs,
   admixture: AdmixtureInputs,
+  method?: 'peso' | 'volumen',
 ) {
   return {
     nombre,
@@ -113,6 +115,7 @@ export function inputsToDbFormat(
     has_air:    concrete.hasAir,
     exposure:   concrete.exposure,
     freeze_thaw: concrete.freezeThaw,
+    metodo_calculo: method || 'peso',
     pec:   cement.pec,
     peaf:  fine.peaf,
     haf:   fine.haf,
@@ -165,5 +168,6 @@ export function dbToInputsFormat(row: ConsultaDB) {
       pozzolanReplacementPct: Number(row.pozzolan_replacement_pct),
       pePozzolan:             Number(row.pe_pozzolan) || 2200,
     } satisfies AdmixtureInputs,
+    method: (row.metodo_calculo === 'volumen' ? 'volumen' : 'peso') as 'peso' | 'volumen',
   };
 }

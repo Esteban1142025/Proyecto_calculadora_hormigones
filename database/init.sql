@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS consultas (
   has_air       BOOLEAN   NOT NULL DEFAULT FALSE,
   exposure      SMALLINT  NOT NULL DEFAULT 1,
   freeze_thaw   BOOLEAN   NOT NULL DEFAULT FALSE,
+  metodo_calculo VARCHAR(10) NOT NULL DEFAULT 'peso',
 
   -- Parámetros del cemento
   pec           NUMERIC   NOT NULL DEFAULT 3150,

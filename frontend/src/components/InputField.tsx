@@ -70,6 +70,17 @@ export const NumberInput: React.FC<NumberInputProps> = ({
   const minValue = min !== undefined ? parseFloat(min.toString()) : undefined;
   const maxValue = max !== undefined ? parseFloat(max.toString()) : undefined;
 
+  // Local string state to handle typing decimals/empty state without resetting
+  const [localValue, setLocalValue] = React.useState<string>(value.toString());
+
+  // Synchronize localValue with value when it changes from outside
+  React.useEffect(() => {
+    const parsedLocal = parseFloat(localValue);
+    if (isNaN(parsedLocal) ? value !== 0 : parsedLocal !== value) {
+      setLocalValue(value.toString());
+    }
+  }, [value]);
+
   const handleIncrement = () => {
     setTouched(true);
     let newValue = Number((value + step).toFixed(6));
@@ -88,14 +99,41 @@ export const NumberInput: React.FC<NumberInputProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTouched(true);
-    const inputValue = e.target.value;
-    if (inputValue === '' || inputValue === '-') {
-      // Si el usuario borra todo, lo dejamos en 0 para que no se rompa el estado numérico
+    let inputValue = e.target.value;
+    
+    // Permitir solo dígitos, puntos, comas y signo menos
+    inputValue = inputValue.replace(/[^0-9.,-]/g, '');
+    
+    if (!allowDecimals) {
+      inputValue = inputValue.replace(/[.,]/g, '');
+    }
+    
+    // Asegurar que haya como máximo un signo menos al inicio
+    if (inputValue.includes('-')) {
+      const parts = inputValue.split('-');
+      inputValue = '-' + parts.join('').replace(/-/g, '');
+    }
+    
+    // Asegurar que haya como máximo un separador decimal (punto o coma)
+    if (allowDecimals) {
+      const firstSeparatorIndex = inputValue.search(/[.,]/);
+      if (firstSeparatorIndex !== -1) {
+        const before = inputValue.slice(0, firstSeparatorIndex + 1);
+        const after = inputValue.slice(firstSeparatorIndex + 1).replace(/[.,]/g, '');
+        inputValue = before + after;
+      }
+    }
+    
+    setLocalValue(inputValue);
+    
+    if (inputValue === '' || inputValue === '-' || inputValue === '.' || inputValue === ',') {
       onChange(0);
       return;
     }
     
-    const numValue = allowDecimals ? parseFloat(inputValue) : parseInt(inputValue, 10);
+    // Normalizar la coma a punto para parseFloat
+    const normalizedValue = inputValue.replace(',', '.');
+    const numValue = allowDecimals ? parseFloat(normalizedValue) : parseInt(normalizedValue, 10);
     if (isNaN(numValue)) return;
     
     onChange(numValue);
@@ -103,11 +141,15 @@ export const NumberInput: React.FC<NumberInputProps> = ({
 
   const handleBlur = () => {
     setTouched(true);
+    let targetValue = value;
     if (minValue !== undefined && value < minValue) {
+      targetValue = minValue;
       onChange(minValue);
     } else if (maxValue !== undefined && value > maxValue) {
+      targetValue = maxValue;
       onChange(maxValue);
     }
+    setLocalValue(targetValue.toString());
   };
 
   const shouldShowError = touched && error;
@@ -135,14 +177,12 @@ export const NumberInput: React.FC<NumberInputProps> = ({
           <Minus className="w-4 h-4" />
         </button>
         <input
-          type="number"
-          value={value}
+          type="text"
+          inputMode={allowDecimals ? "decimal" : "numeric"}
+          value={localValue}
           onChange={handleChange}
           onBlur={handleBlur}
           disabled={disabled}
-          step={allowDecimals ? 'any' : '1'}
-          min={min}
-          max={max}
           className={cn(
             "flex-1 px-3 py-2 bg-[#2c3e50] border-2 shadow-inner text-white font-mono rounded outline-none transition-colors",
             shouldShowError ? "border-red-500 focus:border-red-400" : "border-[#1a252f] focus:border-[#4b6584]",

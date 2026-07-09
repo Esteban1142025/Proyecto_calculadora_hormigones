@@ -45,6 +45,7 @@ export interface CalculatorInputs {
   fineAggregate: FineAggregateInputs;
   coarseAggregate: CoarseAggregateInputs;
   admixture?: AdmixtureInputs;
+  method?: 'peso' | 'volumen';
 }
 
 export interface CalculatorResults {
@@ -321,10 +322,10 @@ export function calculateMixDesign(inputs: CalculatorInputs): CalculatorResults 
   const hsaf = fineAggregate.haf - fineAggregate.absaf;
   const hsag = coarseAggregate.hag - coarseAggregate.absag;
 
-  // Paso 9: Corrections
-  let h2oCorr = h2o - (af * hsaf / 100) - (ag * hsag / 100);
+  // Paso 9: Corrections (usando afMalo del método de peso unitario, según ACI 211.1)
+  let h2oCorr = h2o - (afMalo * hsaf / 100) - (ag * hsag / 100);
   let agCorr = ag * (1 + coarseAggregate.hag / 100);
-  let afCorr = ph - C - h2oCorr - agCorr;
+  let afCorr = afMalo * (1 + fineAggregate.haf / 100);
 
   // Paso 10: Relations
   const caf = afCorr / C;

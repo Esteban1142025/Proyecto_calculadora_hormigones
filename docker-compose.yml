@@ -26,8 +26,8 @@ services:
         condition: service_healthy
     environment:
       PORT: 3000
-      JWT_SECRET: ${JWT_SECRET}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:80}
+      JWT_SECRET: ${JWT_SECRET:-8a4ba4e697aef510a2bb2fc7ecd75f328c4b0b9fb7178e9392fa39de7ddb2ba0e52eeab8a694d7a3493ad0b49a6be4df67f9aa2375625988ef15f1683b11ede8}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
       DB_HOST: db
       DB_PORT: 5432
       DB_NAME: ${DB_NAME:-hormigoncalc}
@@ -42,7 +42,7 @@ services:
     depends_on:
       - backend
     ports:
-      - "80:80"
+      - "5173:80"
 
 volumes:
   postgres_data:
